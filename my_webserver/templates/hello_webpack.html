@@ -1,0 +1,36 @@
+{% load static %}
+<!doctype html>
+<html data-bs-theme="dark">
+  <head>
+    <title>Getting Started with Django and Webpack</title>
+  </head>
+  <body>
+    <div class="container-fluid">
+    <div class="row top-bar bg-primary pt-1 pb-3">
+        <div class="col-md-12">
+            <h1>Getting Started with Django and Webpack</h1>
+        </div>
+    </div>
+    <div class="row pt-1">
+    <div class="col-md-1 side-bar">
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link active" href="#">Home</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">About</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">Contact</a>
+            </li>
+        </ul>
+    </div>
+    <div class="col-md-10 main-content">      
+        <div id="root"></div>
+        <img src="{% static 'images/good_christian_stuff.jpg' %}" alt="Not suspicious at all" class="rounded float-start img-fluid">
+    </div>
+    </div>
+    </div>
+    <script src="{% static 'main-index-bundle.js' %}"></script>
+  </body>
+</html>

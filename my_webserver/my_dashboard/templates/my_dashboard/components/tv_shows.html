@@ -1,0 +1,31 @@
+<div class="row align-items-start">
+    <div class="col-10">
+        <h2>Today's TV Schedule</h2>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Show Name</th>
+                    <th>Episode Name</th>
+                    <th>Episode</th>
+                    <th>Favorite</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in tv_shows %}
+                <tr>
+                    <td >{{ entry.show_name }}</td>
+                    <td>{{ entry.episode_name }}</td>
+                    <td>{{ entry.episode_number }}</td>
+                    <td>
+                    {% if not entry.favorite %}
+                        <i class="bi bi-star"></i>
+                    {% else %}
+                        <i class="bi bi-star-fill"></i>
+                    {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

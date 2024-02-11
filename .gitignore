@@ -1,0 +1,4 @@
+secret*.json
+**/live_trying_things.ipynb
+**/*.pyc
+node_modules/

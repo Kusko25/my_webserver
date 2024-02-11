@@ -1,0 +1,25 @@
+{% extends "my_dashboard/model_view.html" %}
+
+{% block model_view %}
+<h2>Instances List</h2>
+<table class="table table-striped">
+    <thead>
+        <tr>
+        <th>Resolution</th>
+        <th>Group</th>
+        <th>Url</th>
+        <th>Date Added</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for movie_instance in movie_instances %}
+        <tr>
+        <td>{{ movie_instance.resolution }}</td>
+        <td>{{ movie_instance.group }}</td>
+        <td><a href="{{ movie_instance.url }}" target="_blank">{{ movie_instance.url }}</a></td>
+        <td>{{ movie_instance.date_added }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock model_view %}

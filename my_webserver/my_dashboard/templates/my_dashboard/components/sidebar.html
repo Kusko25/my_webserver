@@ -1,0 +1,58 @@
+{% comment %} This is based around this code example: https://www.codeply.com/p/WGCqYEiPBg {% endcomment %}
+
+<div
+  class="d-flex flex-column align-items-center align-items-sm-start px-3 pt-2 text-white min-vh-100">
+  <a
+    href="/"
+    class="d-flex align-items-center pb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+    <span class="fs-5 d-none d-sm-inline">{{sidebar.title}}</span>
+  </a>
+  <ul
+    class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start"
+    id="sidebar-menu">
+  {% for nav_item in sidebar.nav_items %}
+    {% comment %} Insert seperators into the sidebar.nav_items list TODO {% endcomment %}
+    {% if not nav_item.dropdown %}
+      <li class="nav-item {{nav_item.active|default:''}}">
+        <a href="{{nav_item.href|default:'#'}}" class="nav-link align-middle px-0">
+          {% if nav_item.icon %}
+          <i class="fs-4 {{nav_item.icon}} {{nav_item.active|default:''}}"></i>
+          {% endif %}
+          <span class="ms-1 d-none d-sm-inline">{{nav_item.text}}</span>
+        </a>
+      </li>
+    {% else %}
+      <li>
+        <a
+          href="#{{nav_item.dropdown_id}}"
+          data-bs-toggle="collapse"
+          data-bs-target="#{{nav_item.dropdown_id}}"
+          id="{{nav_item.dropdown_id}}-toggle"
+          class="nav-link px-0 align-middle {{nav_item.active|default:''}}">
+          {% if nav_item.icon %}
+          <i class="fs-4 {{nav_item.icon}} {{nav_item.active|default:''}}"></i>
+          {% endif %}
+          <span class="ms-1 d-none d-sm-inline">{{nav_item.text}}</span>
+        </a>
+        <ul
+          class="collapse show nav flex-column ms-1"
+          id="{{nav_item.dropdown_id}}"
+          data-bs-parent="#{{nav_item.dropdown_id}}-toggle">
+          {% for drop_item in nav_item.dropdown %}
+            {% if forloop.first %}
+              <li class="w-100">
+            {% else %}
+              <li>
+            {% endif %}
+                <a href="{{drop_item.href|default:'#'}}" class="nav-link px-0 {{drop_item.active|default:''}}">
+                  <span class="d-none d-sm-inline">{{drop_item.text}}</span>
+                </a>
+              </li>
+          {% endfor %}
+        </ul>
+      </li>
+    {% endif %}
+  {% endfor %}
+  </ul>
+  <hr />
+</div>

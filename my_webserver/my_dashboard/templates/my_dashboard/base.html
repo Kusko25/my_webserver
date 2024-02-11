@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title|default:"My Dashboard"}}</title>
+    {% load static %}
+    <link rel="icon" href="{% static 'images/favicons/icon32x32.png' %}" type="image/x-icon">
+    {% block header %}{% endblock header %}
+    {% block styles %}
+    {% endblock styles %}
+</head>
+<body>
+    <div class="container-fluid">
+      <div class="row flex-nowrap">
+        <div class="col-auto col-md-3 col-xl-2 px-sm-2 px-0 bg-dark">
+          {% include "my_dashboard/components/sidebar.html" %}
+        </div>
+        <div class="col py-3">
+          {% block content %}
+          {% endblock content %}
+        </div>
+      </div>
+    </div>
+    {% load static %}
+    <script src="{% static 'main-index-bundle.js' %}"></script>
+    {% block scripts %}
+    {% endblock scripts %}
+</body>
+</html>
