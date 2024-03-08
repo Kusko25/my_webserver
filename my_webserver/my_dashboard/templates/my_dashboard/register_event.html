@@ -1,0 +1,14 @@
+{% extends "my_dashboard/base.html" %}
+{% load django_bootstrap5 %}
+{% block content %}
+    <div class="row">
+        <div class="col-md-10">
+            <h1>{{ page_heading }}</h1>
+            <form method="post">
+                {% csrf_token %}
+                {% bootstrap_form form %}
+                {% bootstrap_button button_type="submit" content="Save" %}
+            </form>
+        </div>
+    </div>
+{% endblock %}

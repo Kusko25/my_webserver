@@ -1,0 +1,36 @@
+{% extends "my_dashboard/model_view.html" %} {% block model_view %}
+<h2>{{ subtitle }}</h2>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Episode</th>
+      <th>Resolution</th>
+      <th>Source</th>
+      <th>Group</th>
+      <th>Url</th>
+      <th>Date Added</th>
+      <th>Time Posted</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for inst in episode_instances %}
+    <tr>
+      <td>{{ inst.title }}</td>
+      <td>{{ inst.resolution }}</td>
+      <td>{{ inst.source }}</td>
+      <td>{{ inst.group }}</td>
+      <td>
+        <a
+          class="link-secondary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover"
+          href="{{ inst.url }}"
+          target="_blank"
+          >{{ inst.url }}</a
+        >
+      </td>
+      <td>{{ inst.date_added }}</td>
+      <td>{{ inst.time_posted }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock model_view %}

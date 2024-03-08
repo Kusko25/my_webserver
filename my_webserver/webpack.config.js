@@ -1,11 +1,16 @@
 const path = require('path');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+
 
 module.exports = {
+  plugins: [
+    new MiniCssExtractPlugin(),
+  ],
   entry: {
     main: './assets/index.js'
   },
   output: {
-    filename: '[name]-index-bundle.js',  // output bundle file name
+    filename: 'js/webpack/[name]-index-bundle.js',  // output bundle file name
     path: path.resolve(__dirname, './static'),  // path to our Django static directory
   },
   module: {
@@ -19,7 +24,7 @@ module.exports = {
       {
         test: /\.css$/,
         use: [
-          'style-loader',
+          MiniCssExtractPlugin.loader,
           'css-loader'
         ]
       }

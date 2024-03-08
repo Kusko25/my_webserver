@@ -6,12 +6,34 @@
     "configurations": [
         {
             "name": "Python: Django",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}\\my_webserver\\manage.py",
             "args": [
                 "runserver",
                 "localhost:8027"
+            ],
+            "django": true,
+            "justMyCode": true
+        },
+        {
+            "name": "Python: Django MakeMigrations",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}\\my_webserver\\manage.py",
+            "args": [
+                "makemigrations"
+            ],
+            "django": true,
+            "justMyCode": true
+        },
+        {
+            "name": "Python: Django ApplyMigrations",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}\\my_webserver\\manage.py",
+            "args": [
+                "migrate"
             ],
             "django": true,
             "justMyCode": true

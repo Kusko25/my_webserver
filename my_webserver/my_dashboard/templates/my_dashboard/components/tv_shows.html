@@ -1,31 +1,57 @@
-<div class="row align-items-start">
-    <div class="col-10">
-        <h2>Today's TV Schedule</h2>
+<div class="row align-items-start mb-3">
+  <div class="col-10">
+    <div class="card p-1">
+      <div class="card-header">
+      <a
+        data-bs-toggle="collapse"
+        href="#tv-show-table"
+        class="link-body-emphasis link-offset-2 link-offset-3-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover">
+        <h2>
+          <i class="rotatable-section-header bi bi-chevron-down pull-right"></i>
+          Today's TV Schedule
+        </h2>
+      </a>
+      </div>
+      <div class="collapse show" id="tv-show-table">
         <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Show Name</th>
-                    <th>Episode Name</th>
-                    <th>Episode</th>
-                    <th>Favorite</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for entry in tv_shows %}
-                <tr>
-                    <td >{{ entry.show_name }}</td>
-                    <td>{{ entry.episode_name }}</td>
-                    <td>{{ entry.episode_number }}</td>
-                    <td>
-                    {% if not entry.favorite %}
-                        <i class="bi bi-star"></i>
-                    {% else %}
-                        <i class="bi bi-star-fill"></i>
-                    {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
+          <thead>
+            <tr>
+              <th>Show Name</th>
+              <th>Episode Name</th>
+              <th>Favorite</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for entry in tv_shows %} 
+            {% if not entry.favorite %}
+            <tr>
+              {% else %}
+            <tr class="table-warning">
+              {% endif %}
+              <td>
+                <a
+                  class="link-dark link-offset-2 link-offset-3-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover"
+                  href="{{entry.episode_url}}">
+                  {{ entry.show_name }}
+                </a>
+              </td>
+              <td>{{ entry.episode_name }}</td>
+              <td>
+                {% if not entry.favorite %}
+                <a href="{{ entry.favorite_url }}"
+                  ><i class="bi bi-star"></i
+                ></a>
+                {% else %}
+                <a href="{{ entry.favorite_url }}"
+                  ><i class="bi bi-star-fill"></i
+                ></a>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
         </table>
+      </div>
     </div>
+  </div>
 </div>

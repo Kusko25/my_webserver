@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Django",
+            "python_path": "\\..\\.conda\\python.exe",
+            "program": "\\manage.py",
+            "args": [
+                "runserver",
+                "localhost:8027"
+            ]
+        }
+    ]
+}

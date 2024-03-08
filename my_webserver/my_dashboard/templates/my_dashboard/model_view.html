@@ -1,8 +1,12 @@
 {% extends "my_dashboard/base.html" %}
 
 {% block content %}
-    <h1>{{ page_heading }}</h1>
-    {% block model_view %}
-    
-    {% endblock model_view %}
+    <div class="row">
+        <div class="col-md-10">
+            <h1>{{ page_heading }}</h1>
+            {% block model_view %}
+            
+            {% endblock model_view %}
+        </div>
+    </div>
 {% endblock %}

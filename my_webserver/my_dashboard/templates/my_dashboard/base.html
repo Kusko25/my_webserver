@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{title|default:"My Dashboard"}}</title>
+    {% load django_bootstrap5 %}
     {% load static %}
     <link rel="icon" href="{% static 'images/favicons/icon32x32.png' %}" type="image/x-icon">
     {% block header %}{% endblock header %}
     {% block styles %}
+    <link rel="stylesheet" href="{% static 'css/webpack/main-index-bundle.css' %}">
     {% endblock styles %}
 </head>
 <body>
@@ -17,14 +19,17 @@
           {% include "my_dashboard/components/sidebar.html" %}
         </div>
         <div class="col py-3">
+          {% block messages %}
+          {% bootstrap_messages %}
+          {% endblock messages %}
           {% block content %}
           {% endblock content %}
         </div>
       </div>
     </div>
-    {% load static %}
-    <script src="{% static 'main-index-bundle.js' %}"></script>
     {% block scripts %}
+    {% load static %}
+    <script src="{% static 'js/webpack/main-index-bundle.js' %}"></script>
     {% endblock scripts %}
 </body>
 </html>

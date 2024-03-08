@@ -1,9 +1,11 @@
 from django.db import transaction
+from django.contrib import messages
+from django.utils import timezone
 
-from ..models import TVShow, TVShowEpisode, AppSettings, Movie, MovieInstance
+from ..models import TVShow, TVShowEpisode, TVShowEpisodeInstance, AppSettings, Movie, MovieInstance
 from ..utils import process_show_name
 
-from datetime import date
+from datetime import date, datetime
 from collections import defaultdict
 import requests, logging, re
 import feedparser as fp
@@ -102,7 +104,7 @@ def get_tv_schedule(ep_date: date):
 
 def parse_movie_feed():
     url = AppSettings.get_key('movies_feed_url')
-    if AppSettings.get_key('movies_last_update')==date.today():
+    if AppSettings.get_key('movies_last_update')+timezone.timedelta(hours=AppSettings.get_key('movies_update_interval')) > timezone.now():
         return False
     feed = fp.parse(url)
     if feed['bozo']:
@@ -136,19 +138,31 @@ def parse_movie_feed():
                 else:
                     group = "Unknown"
                 cam = any(filter in title for filter in filters)
+                movie_name = process_show_name(movie_name)
+                new_object = {
+                    "year":int(year),
+                    "resolution":resolution,
+                    "group":group,
+                    'movie_name':movie_name,
+                    'link':entry['link'],
+                    'entry_time':entry['published_parsed']
+                }
+                assert new_object['year'] > 1900 and new_object['year'] < 2100,\
+                "Year out of range"
+                assert len(new_object['resolution']) > 0 and len(new_object['resolution']) < 10,\
+                "Presumably invalid resolution"
+                assert len(new_object['group']) > 0,\
+                "Presumably invalid group"
+                assert len(new_object['movie_name']) > 0,\
+                "Presumably invalid movie name"
+                assert 'http' in new_object['link'],\
+                "Presumably invalid link"
+                movie_dict[new_object['movie_name']].append(new_object)
             except:
+                logger.error(f'Error parsing movie feed entry: {year} {resolution} {group} {movie_name} {entry["link"]}')
                 continue # skip if any of the above fails. Regex is not to be trusted
             if cam:
                 continue
-            movie_name = process_show_name(movie_name)
-            movie_dict[movie_name].append({
-                "year":int(year),
-                "resolution":resolution,
-                "group":group,
-                'movie_name':movie_name,
-                'link':entry['link'],
-                'entry_time':entry['published_parsed']
-            })
 
     movies_db = Movie.objects.all()
     movies_db = {movie.title:movie for movie in movies_db}
@@ -162,7 +176,11 @@ def parse_movie_feed():
         logger.error(f'Error saving new movies to database: {e}')
         return e
     
+    existing_instances = []
     for movie in movie_dict:
+        existing_instances.extend(MovieInstance.objects.filter(movie=movies_db[movie]))
+    existing_instances = {(instance.resolution,instance.group,instance.url) for instance in existing_instances}
+    for movie in list(movie_dict.keys()):
         movie_dict[movie] = [MovieInstance(
             movie=movies_db[movie],
             resolution=instance['resolution'],
@@ -172,7 +190,11 @@ def parse_movie_feed():
                 instance['entry_time'].tm_year,
                 instance['entry_time'].tm_mon,
                 instance['entry_time'].tm_mday)
-        ) for instance in movie_dict[movie]]
+        ) for instance in movie_dict[movie]
+        if (instance['resolution'],instance['group'],instance['link']) not in existing_instances
+        ]
+        if len(movie_dict[movie])==0:
+            del movie_dict[movie]
     try:
         with transaction.atomic():
             for movie in movie_dict:
@@ -181,5 +203,137 @@ def parse_movie_feed():
     except Exception as e:
         logger.error(f'Error saving new movie instances to database: {e}')
         return e
-    AppSettings.set_key('movies_last_update',date.today())
+    AppSettings.set_key('movies_last_update',timezone.now())
+    return True
+
+def parse_tv_feed(request):
+    url = AppSettings.get_key('tv_feed_url')
+    if timezone.now() - AppSettings.get_key('tvshows_last_update') < timezone.timedelta(hours=AppSettings.get_key('tvshows_update_interval')):
+        return False
+    feed = fp.parse(url)
+    if feed['bozo']:
+        logger.error(f'Error parsing feed: {feed.bozo_exception}')
+        messages.error(request,f'Error parsing feed: {feed.bozo_exception}')
+        return False
+    filters = AppSettings.get_key('tv_filters')
+    show_dict = defaultdict(lambda:defaultdict(list))
+    for entry in feed.entries:
+        show, season, episode, resolution, source, group, link = None, None, None, None, None, None, None
+        elements = entry.title.split(' & ')
+        for element in elements:
+            title = element
+            re_match = re.match(r'(.*?)[Ss](\d{2})[Ee](\d{2}).*?(\d{3,4}p)\.(.*?)\..*?-(.*)', title)
+            if not re_match:
+                continue
+            show, season, episode, resolution, source, group = re_match.groups()
+            show = show.replace('.', ' ').strip()
+            show = process_show_name(show)
+            new_object = {
+                "resolution":resolution,
+                "source":source,
+                "group":group,
+                'show_name':show,
+                'link':entry['link'],
+                'entry_time':entry['published'],
+                'season':int(season),
+                'episode':int(episode)
+            }
+            if any(filter in title for filter in filters):
+                continue
+            try:
+                assert len(new_object['resolution']) > 0 and len(new_object['resolution']) < 10,\
+                "Presumably invalid resolution"
+                assert len(new_object['group']) > 0,\
+                "Presumably invalid group"
+                assert len(new_object['show_name']) > 0,\
+                "Presumably invalid movie name"
+                assert 'http' in new_object['link'],\
+                "Presumably invalid link"
+            except:
+                logger.error(f'Error parsing tv feed entry: {show} {season} {episode} {resolution} {group} {entry["link"]}')
+                messages.warning(request,f'Error parsing tv feed entry: {show} {season} {episode} {resolution} {group} {entry["link"]}')
+                continue # skip if any of the above fails. Regex is not to be trusted
+            show_dict[new_object['show_name']][(new_object['season'],new_object['episode'])].append(new_object)
+
+    shows_db = TVShow.objects.all()
+    shows_db = {show.title:show for show in shows_db}
+    try:
+        with transaction.atomic():
+            shows = []
+            for show in show_dict:
+                if show not in shows_db:
+                    shows.append(TVShow(title=show))
+                    shows_db[show] = shows[-1]
+            TVShow.objects.bulk_create(shows)
+    except Exception as e:
+        logger.error(f'Error saving new shows to database: {e}')
+        messages.error(request,f'Error saving new shows to database: {e}')
+        return e
+    
+    new_episodes = []    
+    # title = models.CharField(max_length=200)
+    # season = models.IntegerField()
+    # episode = models.IntegerField()
+    # air_date = models.DateField(blank=True, null=True)
+    # description = models.TextField(blank=True, null=True)
+    # tv_show = models.ForeignKey(TVShow, on_delete=models.CASCADE)
+    for show in show_dict:
+        show_episodes = TVShowEpisode.objects.filter(tv_show=shows_db[show])
+        show_episodes = {(episode.season,episode.episode):episode for episode in show_episodes}
+        for season,episode in show_dict[show]:
+            if (season,episode) in show_episodes:
+                continue
+            show_episode = TVShowEpisode(
+                title=f'S{season:02d}E{episode:02d}',
+                season=season,
+                episode=episode,
+                air_date=date.today(),
+                tv_show=shows_db[show]
+            )
+            new_episodes.append(show_episode)
+    try:
+        with transaction.atomic():
+            TVShowEpisode.objects.bulk_create(new_episodes)
+    except Exception as e:
+        logger.error(f'Error saving new show episodes to database: {e}')
+        messages.error(request,f'Error saving new show episodes to database: {e}')
+        return e
+    
+    # episode = models.ForeignKey(TVShowEpisode, on_delete=models.CASCADE)
+    # resolution = models.CharField(max_length=50, default='Unknown')
+    # source = models.CharField(max_length=50, default='Unknown')
+    # group = models.CharField(max_length=50, default='Unknown')
+    # url = models.URLField(max_length=200)
+    # date_added = models.DateField(auto_now_add=True)
+    
+    new_instances = []
+    for show in show_dict:
+        show_episodes = TVShowEpisode.objects.filter(tv_show=shows_db[show])
+        show_episodes = {(episode.season,episode.episode):episode for episode in show_episodes}
+        for season,episode in show_dict[show]:
+            existing_instances = TVShowEpisodeInstance.objects.filter(episode=show_episodes[(season,episode)])
+            existing_instances = {(instance.resolution,instance.source,instance.group,instance.url) for instance in existing_instances}
+            for instance in show_dict[show][(season,episode)]:
+                if (instance['resolution'],instance['source'],instance['group'],instance['link']) in existing_instances:
+                    continue
+                new_instance = TVShowEpisodeInstance(
+                    episode=show_episodes[(season,episode)],
+                    resolution=instance['resolution'],
+                    source=instance['source'],
+                    group=instance['group'],
+                    url=instance['link'],
+                    time_posted=datetime.strptime(
+                        instance['entry_time'],
+                        '%a, %d %b %Y %H:%M:%S %z')
+                )
+                new_instances.append(new_instance)
+    try:
+        with transaction.atomic():
+            TVShowEpisodeInstance.objects.bulk_create(new_instances)
+    except Exception as e:
+        logger.error(f'Error saving new show instances to database: {e}')
+        messages.error(request,f'Error saving new show instances to database: {e}')
+        return e
+
+    AppSettings.set_key('tvshows_last_update',timezone.now())
     return True

@@ -1,6 +1,9 @@
 {% extends "my_dashboard/base.html" %}
 
 {% block content %}
+    {% if medication_info %}
+    {% include "my_dashboard/components/medication.html" %}
+    {% endif %}
     {% include "my_dashboard/components/tv_shows.html" %}
     {% include "my_dashboard/components/movies.html" %}
 {% endblock %}

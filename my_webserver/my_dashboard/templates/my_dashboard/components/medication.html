@@ -1,0 +1,44 @@
+<div class="row align-items-start mb-3">
+  <div class="col-10">
+    <div class="card p-1">
+      <div class="card-header">
+        <h2>
+        {% if medication_info_default_open %}
+          <a
+            data-bs-toggle="collapse"
+            href="#medication-table"
+            class="link-body-emphasis link-offset-2 link-offset-3-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover">
+            <i class="rotatable-section-header bi bi-chevron-down pull-right"></i>
+            Medication
+          </a>
+        {% else %}
+            <a
+                data-bs-toggle="collapse"
+                href="#medication-table"
+                class="link-body-emphasis link-offset-2 link-offset-3-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover collapsed">
+                <i class="rotatable-section-header bi bi-chevron-down pull-right"></i>
+                Medication
+            </a>
+        {% endif %}
+        </h2>
+      </div>
+      {% if medication_info_default_open %}
+      <div class="collapse show" id="medication-table">
+      {% else %}
+      <div class="collapse" id="medication-table">
+      {% endif %}
+        <table class="table">
+          <tbody>
+            {% for row in medication_info %}
+                <tr class="{{row.variant}}">
+                <td>{{ row.medication }}</td>
+                <td>{{ row.expected }}</td>
+                <td>{{ row.message }}</td>
+                </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

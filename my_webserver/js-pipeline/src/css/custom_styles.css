@@ -1,0 +1,7 @@
+.collapsed .rotatable-section-header::before {
+  rotate: -90deg;
+}
+.rotatable-section-header::before {
+  cursor: pointer;
+  transition: all .3s ease-in;
+}

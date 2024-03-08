@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "my_experiments.apps.MyExperimentsConfig",
     "my_dashboard.apps.MyDashboardConfig",
+    'django_bootstrap5', 
 ]
 
 MIDDLEWARE = [
@@ -107,7 +108,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "en-UK"
 
 TIME_ZONE = "Europe/Berlin"
 
