@@ -3,7 +3,7 @@ from django.views.generic import TemplateView, DetailView, FormView
 from django.utils import timezone
 
 from ..models import AppSettings
-from ..models import Movie, MovieInstance, TVShowEpisodeInstance, TVShowEpisode, MedicationSchedule
+from ..models import Movie, MovieInstance, TVShowEpisodeInstance, TVShowEpisode, ScheduleMedication, ScheduleExercise
 from ..logic import get_tv_schedule, parse_movie_feed, parse_tv_feed
 from ..forms import MedicationEventForm
 
@@ -68,16 +68,18 @@ class HomeView(TemplateView):
         context = dict()
         medication_info = list()
         default_open = False
-        for schedule in MedicationSchedule.objects.all():
+        for schedule in ScheduleMedication.objects.all():
             return_code, delta = schedule.is_satisfied()
-            if return_code == MedicationSchedule.ReturnCodes.SATISFIED:
+            if return_code == ScheduleMedication.ReturnCodes.SATISFIED:
                 medication_info.append({
                     'medication': schedule.get_medication_display(),
                     'variant': 'table-success',
                     'message': 'Satisfied',
-                    'expected': f'{schedule.value} {schedule.get_unit_display()}'
+                    'expected': f'{schedule.value} {schedule.get_unit_display()}',
+                    'fulfilled': True,
+                    'fulfill_link': None
                 })
-            elif return_code == MedicationSchedule.ReturnCodes.NOT_SATISFIED:
+            elif return_code == ScheduleMedication.ReturnCodes.NOT_SATISFIED:
                 if delta:
                     message = f'Still missing {delta} {schedule.get_unit_display()}'
                 else:
@@ -86,18 +88,22 @@ class HomeView(TemplateView):
                     'medication': schedule.get_medication_display(),
                     'variant': 'table-warning',
                     'message': message,
-                    'expected': f'{schedule.value} {schedule.get_unit_display()}'
+                    'expected': f'{schedule.value} {schedule.get_unit_display()}',
+                    'fulfilled': False,
+                    'fulfill_link': reverse('mark-schedule-fulfilled', args=[schedule.id])
                 })
                 default_open = True
-            elif return_code == MedicationSchedule.ReturnCodes.CANT_BE_DETERMINED:
+            elif return_code == ScheduleMedication.ReturnCodes.CANT_BE_DETERMINED:
                 medication_info.append({
                     'medication': schedule.get_medication_display(),
                     'variant': 'table-warning',
                     'message': 'Can\'t be determined',
-                    'expected': f'{schedule.value} {schedule.get_unit_display()}'
+                    'expected': f'{schedule.value} {schedule.get_unit_display()}',
+                    'fulfilled': True,
+                    'fulfill_link': '#'
                 })
                 default_open = True
-            elif return_code == MedicationSchedule.ReturnCodes.OVERSATISFIED:
+            elif return_code == ScheduleMedication.ReturnCodes.OVERSATISFIED:
                 if delta:
                     message = f'Overdose by {delta} {schedule.get_unit_display()}'
                 else:
@@ -106,10 +112,12 @@ class HomeView(TemplateView):
                     'medication': schedule.get_medication_display(),
                     'variant': 'table-danger',
                     'message': message,
-                    'expected': f'{schedule.value} {schedule.get_unit_display()}'
+                    'expected': f'{schedule.value} {schedule.get_unit_display()}',
+                    'fulfilled': True,
+                    'fulfill_link': None
                 })
                 default_open = True
-            elif return_code == MedicationSchedule.ReturnCodes.NOT_RELEVANT:
+            elif return_code == ScheduleMedication.ReturnCodes.NOT_RELEVANT:
                 continue
             else:
                 raise Exception('Unknown return code')
@@ -117,8 +125,70 @@ class HomeView(TemplateView):
         if len(medication_info) == 0:
             return context
         context['medication_info'] = medication_info
-        context['medication_info_default_open'] = default_open
-        return context
+        return context, default_open
+    
+    def get_context_exercises(self):
+        context = dict()
+        exercises = list()
+        default_open = False
+
+        for schedule in ScheduleExercise.objects.all():
+            return_code, delta = schedule.is_satisfied()
+            if return_code == ScheduleExercise.ReturnCodes.SATISFIED:
+                exercises.append({
+                    'exercise': schedule.get_exercise_display(),
+                    'variant': 'table-success',
+                    'message': 'Satisfied',
+                    'expected': f'{schedule.value} {schedule.get_unit_display()}',
+                    'fulfilled': True,
+                    'fulfill_link': reverse('mark-schedule-fulfilled-exercise', args=[schedule.id])
+                })
+            elif return_code == ScheduleExercise.ReturnCodes.NOT_SATISFIED:
+                if delta:
+                    message = f'Still missing {delta} {schedule.get_unit_display()}'
+                else:
+                    message = 'Not satisfied'
+                exercises.append({
+                    'exercise': schedule.get_exercise_display(),
+                    'variant': 'table-warning',
+                    'message': message,
+                    'expected': f'{schedule.value} {schedule.get_unit_display()}',
+                    'fulfilled': False,
+                    'fulfill_link': reverse('mark-schedule-fulfilled-exercise', args=[schedule.id])
+                })
+                default_open = True
+            elif return_code == ScheduleExercise.ReturnCodes.CANT_BE_DETERMINED:
+                exercises.append({
+                    'exercise': schedule.get_exercise_display(),
+                    'variant': 'table-warning',
+                    'message': 'Can\'t be determined',
+                    'expected': f'{schedule.value} {schedule.get_unit_display()}',
+                    'fulfilled': True,
+                    'fulfill_link': reverse('mark-schedule-fulfilled-exercise', args=[schedule.id])
+                })
+                default_open = True
+            elif return_code == ScheduleExercise.ReturnCodes.OVERSATISFIED:
+                if delta:
+                    message = f'Oversatisfied by {delta} {schedule.get_unit_display()}'
+                else:
+                    message = 'Oversatisfied'
+                exercises.append({
+                    'exercise': schedule.get_exercise_display(),
+                    'variant': 'table-success',
+                    'message': message,
+                    'expected': f'{schedule.value} {schedule.get_unit_display()}',
+                    'fulfilled': True,
+                    'fulfill_link': reverse('mark-schedule-fulfilled-exercise', args=[schedule.id])
+                })
+            elif return_code == ScheduleExercise.ReturnCodes.NOT_RELEVANT:
+                continue
+            else:
+                raise Exception(f'Unknown return code: {return_code}')
+            
+        if len(exercises) == 0:
+            return context, default_open
+        context['exercise_info'] = exercises
+        return context, default_open
 
     def get_context_movies(self):
         context = dict()
@@ -150,7 +220,13 @@ class HomeView(TemplateView):
         context.update(defaultContext())
         context.update(self.get_context_tv_shows())
         context.update(self.get_context_movies())
-        context.update(self.get_context_medication())
+        schedule_context, default_open = self.get_context_medication()
+        context.update(schedule_context)
+        exercise_context, tmp = self.get_context_exercises()
+        default_open = default_open or tmp
+        context.update(exercise_context)
+
+        context['schedules_default_open'] = default_open
         return context
 
 class MovieView(DetailView):

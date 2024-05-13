@@ -29,6 +29,11 @@ def defaultContext(active_item=None):
     sidebar['title'] = 'Menu'
     nav_items = list()
     nav_items.append(sidebarItem(
+            text='Admin', 
+            icon='bi-archive', 
+            href=reverse('admin:index')
+    ))
+    nav_items.append(sidebarItem(
             text='Home', 
             icon='bi-house', 
             href=reverse('home')

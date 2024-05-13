@@ -20,6 +20,7 @@ class AppSettingsManager(models.Manager):
             'movies_filters': (['cam'], 'json'),
             'movies_time_delta': (3, 'int'),
             'events_medication_csv_path': ('outputs/events/medication.csv', 'str'),
+            'events_exercise_csv_path': ('outputs/events/exercise.csv', 'str'),
             'ddlvalley_search_url': ('https://www.ddlvalley.me/?s={search_term}', 'str'),
             'tvshows_last_update': (timezone.now() - timedelta(days=7), 'datetime'),
             'tv_filters': ([], 'json'),
@@ -322,7 +323,7 @@ class EventMedication(Event):
             raise ValidationError('Cannot add medication events in the future', code='future_date')
         return super().clean()
 
-class MedicationSchedule(models.Model):
+class ScheduleMedication(models.Model):
     medication = models.CharField(max_length=200, choices=EventMedication.MEDICATIONS)
     unit = models.CharField(max_length=200, choices=EventMedication.UNITS, default='mg')
     value = models.FloatField()
@@ -374,20 +375,191 @@ class MedicationSchedule(models.Model):
                 matching_units = [event for event in events if event.unit == self.unit]
                 sum_matching = sum([event.value for event in matching_units])
             else:
-                return MedicationSchedule.ReturnCodes.NOT_RELEVANT, None
+                return ScheduleMedication.ReturnCodes.NOT_RELEVANT, None
             
         if sum_matching == self.value:
             if len(matching_units) == len(events):
-                return MedicationSchedule.ReturnCodes.SATISFIED, None
+                return ScheduleMedication.ReturnCodes.SATISFIED, None
             else:
-                return MedicationSchedule.ReturnCodes.OVERSATISFIED, None
+                return ScheduleMedication.ReturnCodes.OVERSATISFIED, None
         elif sum_matching < self.value:
             if len(matching_units) == len(events):
-                return MedicationSchedule.ReturnCodes.NOT_SATISFIED, self.value - sum_matching
+                return ScheduleMedication.ReturnCodes.NOT_SATISFIED, self.value - sum_matching
             else:
-                return MedicationSchedule.ReturnCodes.CANT_BE_DETERMINED, None
+                return ScheduleMedication.ReturnCodes.CANT_BE_DETERMINED, None
         else:
             if len(matching_units) == len(events):
-                return MedicationSchedule.ReturnCodes.OVERSATISFIED, sum_matching - self.value
+                return ScheduleMedication.ReturnCodes.OVERSATISFIED, sum_matching - self.value
             else:
-                return MedicationSchedule.ReturnCodes.OVERSATISFIED, None
+                return ScheduleMedication.ReturnCodes.OVERSATISFIED, None
+    
+    def fulfill(self):
+        return_code, delta = self.is_satisfied()
+        if return_code == ScheduleMedication.ReturnCodes.NOT_SATISFIED:
+            EventMedication.objects.create(
+                unit=self.unit, 
+                value=delta, 
+                medication=self.medication, 
+                timestamp=timezone.localtime(), 
+                event_type='medication', 
+                description='Fulfilled by schedule'
+                )
+            return True
+        else:
+            return False
+
+class EventExercise(Event):
+    EXERCISES = (
+        ('cardio','Cardio'),
+        # Cycling
+        ('strength','Strength'),
+        # Pushups, Situps, Squats, Lifts
+        ('flexibility','Flexibility'),
+        # That thing where you touch your toes
+    )
+    UNITS = (
+        ('minutes','Minutes'),
+        ('km','Kilometers'),
+        ('reps','Repetitions'),
+    )
+    EVENT_TYPE = (
+        ('exercise','Exercise'),
+    )
+    event_type = models.CharField(max_length=200, choices=EVENT_TYPE, default='exercise')
+    unit = models.CharField(max_length=200, choices=UNITS, default='minutes')
+    value = models.FloatField()
+    exercise = models.CharField(max_length=200, choices=EXERCISES, default='cardio')
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        logger.info(f'New exercise event: {self}')
+        csv_path = AppSettings.get_key('events_exercise_csv_path')
+        csv_path = Path(csv_path)
+        csv_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(csv_path, 'w') as f:
+            f.write(EventExercise.to_csv())
+        logger.info(f'Updated exercise event CSV: {csv_path.absolute()}')
+    
+    def to_csv():
+        def clean_string(s):
+            s = str(s)
+            if ',' in s or '\n' in s:
+                s = s.replace('"','""')
+                s = '"' + s + '"'
+            return s
+        csv_lines = [
+            'timestamp,event_type,exercise,value,unit,description'
+        ]
+        for event in EventExercise.objects.all():
+            line = [
+                str(event.timestamp.timestamp()),
+                event.event_type,
+                event.exercise,
+                clean_string(event.value),
+                event.unit,
+                clean_string(event.description),
+            ]
+            csv_lines.append(','.join(line))
+        return '\n'.join(csv_lines)
+    
+    def clean(self):
+        if self.exercise == 'cardio' and self.unit != 'minutes':
+            raise ValidationError('Invalid unit for cardio', code='unit_mismatch')
+        if self.exercise in {'strength','flexibility'} and self.unit not in {'minutes','reps'}:
+            raise ValidationError('Invalid unit for exercise', code='unit_mismatch')
+        if self.timestamp.date() + timedelta(minutes=10) > datetime.now().date():
+            raise ValidationError('Cannot add exercise events in the future', code='future_date')
+        return super().clean()
+
+class ScheduleExercise(models.Model):
+    exercise = models.CharField(max_length=200, choices=EventExercise.EXERCISES)
+    unit = models.CharField(max_length=200, choices=EventExercise.UNITS, default='minutes')
+    value = models.FloatField()
+    
+    METHODS = (
+        ('daily','Daily'),
+        ('weekly','Weekly'),
+        ('monthly','Monthly'),
+        ('weekdays','Weekdays'),
+    )
+    method = models.CharField(max_length=200, choices=METHODS, default='daily')
+    weekdays = models.JSONField(default=list, blank=True, null=False, help_text='0=Monday, 1=Tuesday, ..., 6=Sunday')
+
+    
+        
+    DEFAULT_CHUNKS = {
+        'minutes': 20.0,
+        'km': 5.0,
+        'reps': 10.0,
+    }
+
+    # To make sure that the default chunks are set for all units
+    for unit_ in EventExercise.UNITS:
+        assert unit_[0] in DEFAULT_CHUNKS, f'Missing default chunk for unit: {unit_[0]}'
+    
+    class ReturnCodes(enum.Enum):
+        NOT_SATISFIED = 0
+        SATISFIED = 1
+        CANT_BE_DETERMINED = 2
+        OVERSATISFIED = 3
+        NOT_RELEVANT = 4
+
+    def __str__(self):
+        if self.method == 'weekdays':
+            if len(self.weekdays) == 7:
+                return f'{self.exercise} - {self.method} - Every day'
+            elif self.weekdays == [0,1,2,3,4]:
+                return f'{self.exercise} - {self.method} - Weekdays'
+            elif self.weekdays == [5,6]:
+                return f'{self.exercise} - {self.method} - Weekends'
+            else:
+                return f'{self.exercise} - {self.method} - {", ".join([datetime.fromisoformat(str(day)).strftime("%A") for day in self.weekdays])}'
+        return f'{self.exercise} - {self.method}'
+
+    def is_satisfied(self):
+        if self.method == 'daily':
+            events = EventExercise.objects.filter(exercise=self.exercise, timestamp__date=timezone.now().date())
+            matching_units = [event for event in events if event.unit == self.unit]
+            sum_matching = sum([event.value for event in matching_units])
+        elif self.method == 'weekly':
+            events = EventExercise.objects.filter(exercise=self.exercise, timestamp__gte=timezone.now() - timedelta(days=7))
+            matching_units = [event for event in events if event.unit == self.unit]
+            sum_matching = sum([event.value for event in matching_units])
+        elif self.method == 'monthly':
+            events = EventExercise.objects.filter(exercise=self.exercise, timestamp__date_gte=timezone.now().date() - timedelta(days=30))
+            matching_units = [event for event in events if event.unit == self.unit]
+            sum_matching = sum([event.value for event in matching_units])
+        elif self.method == 'weekdays':
+            if timezone.now().weekday() in self.weekdays:
+                events = EventExercise.objects.filter(exercise=self.exercise, timestamp__date=timezone.now().date())
+                matching_units = [event for event in events if event.unit == self.unit]
+                sum_matching = sum([event.value for event in matching_units])
+            else:
+                return ScheduleExercise.ReturnCodes.NOT_RELEVANT, None
+        
+        if sum_matching == self.value:
+            if len(matching_units) == len(events):
+                return ScheduleExercise.ReturnCodes.SATISFIED, None
+            else:
+                return ScheduleExercise.ReturnCodes.OVERSATISFIED, None
+        elif sum_matching < self.value:
+            if len(matching_units) == len(events):
+                return ScheduleExercise.ReturnCodes.NOT_SATISFIED, self.value - sum_matching
+            else:
+                return ScheduleExercise.ReturnCodes.CANT_BE_DETERMINED, None
+        else:
+            if len(matching_units) == len(events):
+                return ScheduleExercise.ReturnCodes.OVERSATISFIED, sum_matching - self.value
+            else:
+                return ScheduleExercise.ReturnCodes.OVERSATISFIED, None
+        
+    def fulfill(self):
+        EventExercise.objects.create(
+            unit=self.unit, 
+            value=self.DEFAULT_CHUNKS[self.unit],
+            exercise=self.exercise, 
+            timestamp=timezone.localtime(), 
+            event_type='exercise', 
+            description='Fulfilled by schedule'
+            )
+        return True

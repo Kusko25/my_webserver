@@ -2,7 +2,7 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 
 from rest_framework import status
-from ..models import TVShow
+from ..models import TVShow, ScheduleMedication, ScheduleExercise
 
 import logging
 
@@ -21,4 +21,16 @@ def mark_show_favorite(request, show_id):
     show = show[0]
     show.favorite = not show.favorite
     show.save()
+    return HttpResponseRedirect(reverse('home'))
+
+def mark_schedule_fulfilled_medication(request, pk):
+    """Mark a MedicationSchedule as fulfilled."""
+    schedule = ScheduleMedication.objects.get(pk=pk)
+    schedule.fulfill()
+    return HttpResponseRedirect(reverse('home'))
+
+def mark_schedule_fulfilled_exercise(request, pk):
+    """Mark a MedicationSchedule as fulfilled."""
+    schedule = ScheduleExercise.objects.get(pk=pk)
+    schedule.fulfill()
     return HttpResponseRedirect(reverse('home'))

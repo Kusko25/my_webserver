@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import *
 
 # Register your models here.
-for model in [Movie, MovieInstance, TVShow, TVShowEpisode, TVShowEpisodeInstance, EventMedication, AppSettings, MedicationSchedule]:
+for model in [Movie, MovieInstance, TVShow, TVShowEpisode, TVShowEpisodeInstance, EventMedication, EventExercise, AppSettings, ScheduleMedication, ScheduleExercise]:
     # list_display
     # Custom
     if model == AppSettings:
@@ -18,6 +18,9 @@ for model in [Movie, MovieInstance, TVShow, TVShowEpisode, TVShowEpisodeInstance
                 list_display.append(field.name)
         for field in model._meta.fields:
             if field.get_internal_type() == 'DateField':
+                list_display.append(field.name)
+        for field in model._meta.fields:
+            if field.get_internal_type() == 'DateTimeField':
                 list_display.append(field.name)
     # list_filter
     # Custom
