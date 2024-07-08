@@ -3,13 +3,17 @@ from django.views.generic import TemplateView, DetailView, FormView
 from django.utils import timezone
 
 from ..models import AppSettings
-from ..models import Movie, MovieInstance, TVShowEpisodeInstance, TVShowEpisode, ScheduleMedication, ScheduleExercise
+from ..models import Movie, MovieInstance, TVShowEpisodeInstance, TVShowEpisode, ScheduleMedication, ScheduleExercise, SchedulePlantWatering
 from ..logic import get_tv_schedule, parse_movie_feed, parse_tv_feed
 from ..forms import MedicationEventForm
 
 from .utils import defaultContext
+from ..utils import call_external_tool
 
 from datetime import date, timedelta
+from logging import getLogger
+
+logger = getLogger(__name__)
 
 # Create your views here.
 
@@ -21,7 +25,7 @@ class HomeView(TemplateView):
         tv_shows = list()
         schedule = get_tv_schedule(ep_date=date.today())
         search_url = AppSettings.get_key('ddlvalley_search_url')
-        if schedule!=None:
+        if schedule is not None:
             for episode in schedule:
                 tv_shows.append(
                     {
@@ -214,12 +218,103 @@ class HomeView(TemplateView):
             context['movies'].append(movie)
         return context
 
+    def get_context_plants(self):
+        context = dict()
+        plants = list()
+        for schedule in SchedulePlantWatering.objects.all():
+            return_code, delta = schedule.is_satisfied()
+            if return_code == SchedulePlantWatering.ReturnCodes.SATISFIED:
+                plants.append({
+                    'plant': schedule.get_plant_display(),
+                    'variant': 'table-success',
+                    'message': 'Satisfied',
+                    'expected': f'{schedule.value} {schedule.get_unit_display()}',
+                    'fulfilled': True,
+                    'fulfill_link': reverse('mark-schedule-fulfilled-plant', args=[schedule.id])
+                })
+            elif return_code == SchedulePlantWatering.ReturnCodes.NOT_SATISFIED:
+                if delta:
+                    message = f'Still missing {delta} {schedule.get_unit_display()}'
+                else:
+                    message = 'Not satisfied'
+                plants.append({
+                    'plant': schedule.get_plant_display(),
+                    'variant': 'table-warning',
+                    'message': message,
+                    'expected': f'{schedule.value} {schedule.get_unit_display()}',
+                    'fulfilled': False,
+                    'fulfill_link': reverse('mark-schedule-fulfilled-plant', args=[schedule.id])
+                })
+            elif return_code == SchedulePlantWatering.ReturnCodes.CANT_BE_DETERMINED:
+                plants.append({
+                    'plant': schedule.get_plant_display(),
+                    'variant': 'table-warning',
+                    'message': 'Can\'t be determined',
+                    'expected': f'{schedule.value} {schedule.get_unit_display()}',
+                    'fulfilled': True,
+                    'fulfill_link': reverse('mark-schedule-fulfilled-plant', args=[schedule.id])
+                })
+            elif return_code == SchedulePlantWatering.ReturnCodes.OVERSATISFIED:
+                if delta:
+                    message = f'Oversatisfied by {delta} {schedule.get_unit_display()}'
+                else:
+                    message = 'Oversatisfied'
+                plants.append({
+                    'plant': schedule.get_plant_display(),
+                    'variant': 'table-success',
+                    'message': message,
+                    'expected': f'{schedule.value} {schedule.get_unit_display()}',
+                    'fulfilled': True,
+                    'fulfill_link': reverse('mark-schedule-fulfilled-plant', args=[schedule.id])
+                })
+            elif return_code == SchedulePlantWatering.ReturnCodes.NOT_RELEVANT:
+                continue
+            else:
+                raise Exception(f'Unknown return code: {return_code}')
+        if len(plants) == 0:
+            return context
+        context['plant_info'] = plants
+        return context
 
+    def get_context_topbar(self):
+        context = dict()
+        headset_info = call_external_tool('headsetcontrol.exe', ['-o', 'json'], parseAsJson=True)
+        if len(headset_info.get('devices', [])) > 1:
+            logger.warning('More than one headset detected, defaulting to first one')
+        print(headset_info)
+        for device in headset_info.get('devices', []):
+            # headset.name, headset.icon, headset.text
+            context['headset'] = {
+                'name': device.get('device', 'Unknown')
+            }
+            battery_status = device['battery']['status']
+            battery_level = device['battery']['level']
+            if battery_status == 'BATTERY_CHARGING':
+                context['headset']['icon'] = 'battery-charging'
+                context['headset']['text'] = 'Charging...' # During charging, level is always 100
+            elif battery_status == 'BATTERY_AVAILABLE':
+                if battery_level>85:
+                    context['headset']['icon'] = 'battery-full'
+                elif battery_level>35:
+                    context['headset']['icon'] = 'battery-half'
+                else:
+                    context['headset']['icon'] = 'battery'
+                context['headset']['text'] = f'{battery_level}%'
+            else:
+                logger.warning(f'Unknown battery status: {battery_status}')
+                context['headset']['icon'] = 'ban'
+                context['headset']['text'] = 'Unknown'
+            break
+        print(context)
+        return {'topbar': context}
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(defaultContext())
         context.update(self.get_context_tv_shows())
         context.update(self.get_context_movies())
+        context.update(self.get_context_plants())
+        context.update(self.get_context_topbar())
         schedule_context, default_open = self.get_context_medication()
         context.update(schedule_context)
         exercise_context, tmp = self.get_context_exercises()

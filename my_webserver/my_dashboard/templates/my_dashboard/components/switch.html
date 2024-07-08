@@ -1,0 +1,43 @@
+<div class="form-check form-switch">
+    <input class="form-check-input" type="checkbox" id="{{ switch_id }}">
+    <label class="form-check-label" for="{{ switch_id }}">{{ switch_label }}</label>
+    <script>
+        let switch_get_url = "{{ switch_get_url }}";
+        let switch_get_param = "{{ switch_get_param }}";
+        let switch_inverted = "{{ switch_inverted | default: 'false' }}";
+        switch_inverted = switch_inverted === "true";
+        let switch_set_url = "{{ switch_set_url }}";
+        let switch_set_param = "{{ switch_set_param }}";
+        let switch_id = "{{ switch_id }}";
+
+        let switch_ = document.getElementById(switch_id);
+        let switch_state = false;
+        // Perform a GET request to get the current state of the switch
+        fetch(switch_get_url)
+            .then(response => response.json())
+            .then(data => {
+                switch_state = data[switch_get_param];
+                if (switch_inverted) {
+                    switch_state = !switch_state;
+                }
+                switch_.checked = switch_state;
+            });
+        
+        // Add an event listener to the switch to perform a POST request when the switch is toggled
+        switch_.addEventListener('change', (event) => {
+            switch_state = event.target.checked;
+            if (switch_inverted) {
+                switch_state = !switch_state;
+            }
+            fetch(switch_set_url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'form-data'
+                },
+                body: JSON.stringify({
+                    [switch_set_param]: switch_state
+                })
+            });
+        });
+
+</div>

@@ -4,3 +4,4 @@ secret*.json
 node_modules/
 my_webserver/outputs/events/medication.csv
 my_webserver/outputs/events/exercise.csv
+db.sqlite3

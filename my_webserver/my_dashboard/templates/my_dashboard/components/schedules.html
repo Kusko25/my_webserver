@@ -62,6 +62,21 @@
                 </tr>
             {% endfor %}
           </tbody>
+          <thead>
+            <tr>
+              <th>Plants</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in plant_info %}
+                <tr class="{{row.variant}}">
+                <td>{{ row.plant }}</td>
+                <td>{{ row.expected }}</td>
+                <td>{{ row.message }}</td>
+                <td><a href="{{ row.fulfill_link }}" class="link-dark"><i class="bi bi-check-square"></i></a></td>
+                </tr>
+            {% endfor %}
+          </tbody>
         </table>
       </div>
     </div>

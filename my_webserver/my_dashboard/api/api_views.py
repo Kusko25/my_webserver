@@ -2,7 +2,7 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 
 from rest_framework import status
-from ..models import TVShow, ScheduleMedication, ScheduleExercise
+from ..models import TVShow, ScheduleMedication, ScheduleExercise, SchedulePlantWatering
 
 import logging
 
@@ -32,5 +32,11 @@ def mark_schedule_fulfilled_medication(request, pk):
 def mark_schedule_fulfilled_exercise(request, pk):
     """Mark a MedicationSchedule as fulfilled."""
     schedule = ScheduleExercise.objects.get(pk=pk)
+    schedule.fulfill()
+    return HttpResponseRedirect(reverse('home'))
+
+def mark_schedule_fulfilled_plant(request, pk):
+    """Mark a MedicationSchedule as fulfilled."""
+    schedule = SchedulePlantWatering.objects.get(pk=pk)
     schedule.fulfill()
     return HttpResponseRedirect(reverse('home'))

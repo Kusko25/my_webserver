@@ -1,8 +1,10 @@
 {% extends "my_dashboard/base.html" %}
 
 {% block content %}
+    {% csrf_token %}
+    {% include "my_dashboard/components/topbar.html" %}
     {% if medication_info %}
-    {% include "my_dashboard/components/medication.html" %}
+    {% include "my_dashboard/components/schedules.html" %}
     {% endif %}
     {% include "my_dashboard/components/tv_shows.html" %}
     {% include "my_dashboard/components/movies.html" %}

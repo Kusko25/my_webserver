@@ -1,6 +1,7 @@
 from django.urls import path
 from .views import HomeView, MovieView, MedicationEventFormView, TVShowEpisodeView
-from .api.api_views import mark_show_favorite, mark_schedule_fulfilled_medication, mark_schedule_fulfilled_exercise
+from .api.api_views import mark_show_favorite, mark_schedule_fulfilled_medication, mark_schedule_fulfilled_exercise, mark_schedule_fulfilled_plant
+from .views.views_api import ErrorView_404, ControllerView_DailyTemp
 
 urlpatterns = [
     path('', HomeView.as_view(), name='home'),
@@ -10,4 +11,9 @@ urlpatterns = [
     path('api/mark_show_favorite/<int:show_id>/', mark_show_favorite, name='mark-show-favorite'),
     path('api/medication/schedule/fulfill/<int:pk>/', mark_schedule_fulfilled_medication, name='mark-schedule-fulfilled'),
     path('api/medication/schedule/exercise/fulfill/<int:pk>/', mark_schedule_fulfilled_exercise, name='mark-schedule-fulfilled-exercise'),
+    path('api/medication/schedule/plant/fulfill/<int:pk>/', mark_schedule_fulfilled_plant, name='mark-schedule-fulfilled-plant'),
+    path('api/control/daily_temp/', ControllerView_DailyTemp.as_view(), name='control-daily-temp'),
+    
+    # All 'api/' paths that weren't caught by the above paths will return a 404
+    path('api/', ErrorView_404.as_view(), name='api-404'),
 ]

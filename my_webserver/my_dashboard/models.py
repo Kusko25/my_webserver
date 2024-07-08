@@ -563,3 +563,118 @@ class ScheduleExercise(models.Model):
             description='Fulfilled by schedule'
             )
         return True
+
+class EventPlantWatering(Event):
+    PLANTS = (
+        ('bambooLR','Bamboo (Living Room)'),
+        ('bambooBR','Bamboo (Bedroom)'),
+        ('fern','Fern'),
+        ('pepperplant','Pepper Plant'),
+        ('potato','Potato'),
+    )
+    UNITS = (
+        ('ml','Milliliters'),
+        ('l','Liters'),
+    )
+    EVENT_TYPE = (
+        ('plant_watering','Plant Watering'),
+    )
+    event_type = models.CharField(max_length=200, choices=EVENT_TYPE, default='plant_watering')
+    unit = models.CharField(max_length=200, choices=UNITS, default='ml')
+    value = models.FloatField()
+    plant = models.CharField(max_length=200, choices=PLANTS, default='bambooLR')
+    
+    def clean(self):
+        if self.timestamp.date() + timedelta(minutes=10) > datetime.now().date():
+            raise ValidationError('Cannot add plant watering events in the future', code='future_date')
+        return super().clean()
+
+class SchedulePlantWatering(models.Model):
+    plant = models.CharField(max_length=200, choices=EventPlantWatering.PLANTS)
+    unit = models.CharField(max_length=200, choices=EventPlantWatering.UNITS, default='ml')
+    value = models.FloatField()
+    
+    METHODS = (
+        ('daily','Daily'),
+        ('weekly','Weekly'),
+        ('monthly','Monthly'),
+        ('weekdays','Weekdays'),
+    )
+    method = models.CharField(max_length=200, choices=METHODS, default='daily')
+    weekdays = models.JSONField(default=list, blank=True, null=False, help_text='0=Monday, 1=Tuesday, ..., 6=Sunday')
+    
+    DEFAULT_CHUNKS = {
+        'ml': 250.0,
+        'l': 1.0,
+    }
+
+    # To make sure that the default chunks are set for all units
+    for unit_ in EventPlantWatering.UNITS:
+        assert unit_[0] in DEFAULT_CHUNKS, f'Missing default chunk for unit: {unit_[0]}'
+    
+    class ReturnCodes(enum.Enum):
+        NOT_SATISFIED = 0
+        SATISFIED = 1
+        CANT_BE_DETERMINED = 2
+        OVERSATISFIED = 3
+        NOT_RELEVANT = 4
+
+    def __str__(self):
+        if self.method == 'weekdays':
+            if len(self.weekdays) == 7:
+                return f'{self.plant} - {self.method} - Every day'
+            elif self.weekdays == [0,1,2,3,4]:
+                return f'{self.plant} - {self.method} - Weekdays'
+            elif self.weekdays == [5,6]:
+                return f'{self.plant} - {self.method} - Weekends'
+            else:
+                return f'{self.plant} - {self.method} - {", ".join([datetime.fromisoformat(str(day)).strftime("%A") for day in self.weekdays])}'
+        return f'{self.plant} - {self.method}'
+
+    def is_satisfied(self):
+        if self.method == 'daily':
+            events = EventPlantWatering.objects.filter(plant=self.plant, timestamp__date=timezone.now().date())
+            matching_units = [event for event in events if event.unit == self.unit]
+            sum_matching = sum([event.value for event in matching_units])
+        elif self.method == 'weekly':
+            events = EventPlantWatering.objects.filter(plant=self.plant, timestamp__gte=timezone.now() - timedelta(days=7))
+            matching_units = [event for event in events if event.unit == self.unit]
+            sum_matching = sum([event.value for event in matching_units])
+        elif self.method == 'monthly':
+            events = EventPlantWatering.objects.filter(plant=self.plant, timestamp__date_gte=timezone.now().date() - timedelta(days=30))
+            matching_units = [event for event in events if event.unit == self.unit]
+            sum_matching = sum([event.value for event in matching_units])
+        elif self.method == 'weekdays':
+            if timezone.now().weekday() in self.weekdays:
+                events = EventPlantWatering.objects.filter(plant=self.plant, timestamp__date=timezone.now().date())
+                matching_units = [event for event in events if event.unit == self.unit]
+                sum_matching = sum([event.value for event in matching_units])
+            else:
+                return SchedulePlantWatering.ReturnCodes.NOT_RELEVANT, None
+        
+        if sum_matching == self.value:
+            if len(matching_units) == len(events):
+                return SchedulePlantWatering.ReturnCodes.SATISFIED, None
+            else:
+                return SchedulePlantWatering.ReturnCodes.OVERSATISFIED, None
+        elif sum_matching < self.value:
+            if len(matching_units) == len(events):
+                return SchedulePlantWatering.ReturnCodes.NOT_SATISFIED, self.value - sum_matching
+            else:
+                return SchedulePlantWatering.ReturnCodes.CANT_BE_DETERMINED, None
+        else:
+            if len(matching_units) == len(events):
+                return SchedulePlantWatering.ReturnCodes.OVERSATISFIED, sum_matching - self.value
+            else:
+                return SchedulePlantWatering.ReturnCodes.OVERSATISFIED, None
+        
+    def fulfill(self):
+        EventPlantWatering.objects.create(
+            unit=self.unit, 
+            value=self.DEFAULT_CHUNKS[self.unit],
+            plant=self.plant, 
+            timestamp=timezone.localtime(), 
+            event_type="plant_watering", 
+            description='Fulfilled by schedule'
+            )
+        return True
