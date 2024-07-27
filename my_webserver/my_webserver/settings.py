@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "my_experiments.apps.MyExperimentsConfig",
     "my_dashboard.apps.MyDashboardConfig",
     'django_bootstrap5', 
+    'rest_framework',
 ]
 
 MIDDLEWARE = [

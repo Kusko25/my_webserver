@@ -1,7 +1,7 @@
 <div class="row align-items-start mb-3 bg-secondary text-white">
     <div class="col">
         <nav class="navbar navbar-expand-lg navbar-dark bg-secondary">
-            <div class="container-fluid">
+            <div class="container-fluid justify-content-start">
                 {% if topbar.headset %}
                 <div id="navElHeadset">
                     <table class="table-sm bg-secondary">
@@ -21,15 +21,37 @@
                             </tr>
                         </tbody>
                     </table>
-                    {% comment %}                     
-                    <span class="navbar-text">Logitech G533</span>
-                    <i class="bi bi-battery"></i>
-                    <i class="bi bi-battery-half"></i>
-                    <i class="bi bi-battery-full"></i>
-                    <i class="bi bi-battery-charging"></i>
-                    <span class="navbar-text">Battery: 100%</span>
-                    {% endcomment %}
                 </div>
+                <div class="vr ms-1 me-1"></div>
+                {% endif %}
+                {% if topbar.pc_power %}
+                <div id="navElPcPower">
+                    <table class="table-sm bg-secondary">
+                        <tbody>
+                            <tr>
+                                <td rowspan="2">
+                                    <span class="navbar-brand">PC Power</span>
+                                    <i class="bi bi-lightning-fill navbar-brand"></i>
+                                </td>
+                                <th>
+                                    <span class="navbar-text">Consumption Today:</span>
+                                </th>
+                                <td>
+                                    <span class="navbar-text">{{ topbar.pc_power.today }}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>
+                                    <span class="navbar-text">Consumption Current:</span>
+                                </th>
+                                <td>
+                                    <span class="navbar-text">{{ topbar.pc_power.current }}</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="vr ms-1 me-1"></div>
                 {% endif %}
             </div>
         </nav>

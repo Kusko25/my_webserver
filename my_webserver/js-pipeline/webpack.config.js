@@ -10,7 +10,8 @@ module.exports = {
     new MiniCssExtractPlugin(options = { filename: 'css/webpack/[name]-index-bundle.css' }),
   ],
   entry: {
-    main: './src/js/main.js'
+    main: './src/js/main.js',
+    power_monitor: './src/js/power_monitor.js'
   },
   output: {
     filename: 'js/webpack/[name]-index-bundle.js',  // output bundle file name

@@ -4,6 +4,11 @@ from logging import getLogger
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.parsers import JSONParser
+from django.utils import timezone
+
+from ..models import AppSettings
+
+from PyP100 import PyP110
 
 logger = getLogger(__name__)
 
@@ -65,3 +70,19 @@ class ControllerView_DailyTemp(BaseJSONView):
         except Exception as e:
             logger.exception(e)
             return Response({'message': 'Failed'}, status=500)
+
+class PowerReadingView(BaseJSONView):
+    def get(self, request, *args, **kwargs):
+        p110 = PyP110.P110(
+            address=AppSettings.get_key('p110_address'),
+            email=AppSettings.get_key('p110_email'),
+            password=AppSettings.get_key('p110_password')
+        )
+        energy_data = p110.getEnergyUsage()
+        data = {
+            "timestamp": timezone.now().isoformat(),
+            "power": 0.0
+        }
+        if 'current_power' in energy_data:
+            data['power'] = energy_data['current_power']
+        return Response(data)

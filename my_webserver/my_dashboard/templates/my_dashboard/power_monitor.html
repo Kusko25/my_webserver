@@ -1,0 +1,13 @@
+{% extends "my_dashboard/base.html" %}
+
+{% include "my_" %}
+{% block content %}
+    {% csrf_token %}
+    {% include "my_dashboard/components/topbar.html" %}
+    {% include "my_dashboard/components/power_mon_graph_body.html" %}
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+{% include "my_dashboard/components/power_mon_graph_head.html" %}
+{% endblock scripts %}

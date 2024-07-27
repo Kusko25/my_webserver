@@ -1,14 +1,12 @@
 from django.urls import reverse, reverse_lazy
 from django.views.generic import TemplateView, DetailView, FormView
-from django.utils import timezone
 
 from ..models import AppSettings
 from ..models import Movie, MovieInstance, TVShowEpisodeInstance, TVShowEpisode, ScheduleMedication, ScheduleExercise, SchedulePlantWatering
 from ..logic import get_tv_schedule, parse_movie_feed, parse_tv_feed
 from ..forms import MedicationEventForm
 
-from .utils import defaultContext
-from ..utils import call_external_tool
+from .utils import defaultContext, get_context_topbar
 
 from datetime import date, timedelta
 from logging import getLogger
@@ -276,45 +274,13 @@ class HomeView(TemplateView):
         context['plant_info'] = plants
         return context
 
-    def get_context_topbar(self):
-        context = dict()
-        headset_info = call_external_tool('headsetcontrol.exe', ['-o', 'json'], parseAsJson=True)
-        if len(headset_info.get('devices', [])) > 1:
-            logger.warning('More than one headset detected, defaulting to first one')
-        print(headset_info)
-        for device in headset_info.get('devices', []):
-            # headset.name, headset.icon, headset.text
-            context['headset'] = {
-                'name': device.get('device', 'Unknown')
-            }
-            battery_status = device['battery']['status']
-            battery_level = device['battery']['level']
-            if battery_status == 'BATTERY_CHARGING':
-                context['headset']['icon'] = 'battery-charging'
-                context['headset']['text'] = 'Charging...' # During charging, level is always 100
-            elif battery_status == 'BATTERY_AVAILABLE':
-                if battery_level>85:
-                    context['headset']['icon'] = 'battery-full'
-                elif battery_level>35:
-                    context['headset']['icon'] = 'battery-half'
-                else:
-                    context['headset']['icon'] = 'battery'
-                context['headset']['text'] = f'{battery_level}%'
-            else:
-                logger.warning(f'Unknown battery status: {battery_status}')
-                context['headset']['icon'] = 'ban'
-                context['headset']['text'] = 'Unknown'
-            break
-        print(context)
-        return {'topbar': context}
-    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(defaultContext())
         context.update(self.get_context_tv_shows())
         context.update(self.get_context_movies())
         context.update(self.get_context_plants())
-        context.update(self.get_context_topbar())
+        context.update(get_context_topbar())
         schedule_context, default_open = self.get_context_medication()
         context.update(schedule_context)
         exercise_context, tmp = self.get_context_exercises()
@@ -322,6 +288,16 @@ class HomeView(TemplateView):
         context.update(exercise_context)
 
         context['schedules_default_open'] = default_open
+        return context
+
+class PowerMonitorView(TemplateView):
+    template_name = 'my_dashboard/power_monitor.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(defaultContext())
+        context.update(get_context_topbar())
+        context['page_heading'] = 'Power Monitor'
         return context
 
 class MovieView(DetailView):

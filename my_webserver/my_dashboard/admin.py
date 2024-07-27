@@ -1,24 +1,49 @@
 from django.contrib import admin
-from .models import *
+from django.http import HttpResponse
+import my_dashboard.models as mdl
+import csv
+
 
 # Register your models here.
+
+@admin.register(mdl.EventPlantWatering)
+class AdminEventPlantWatering(admin.ModelAdmin):
+    list_display = ['plant', 'value', 'unit', 'timestamp']
+    list_filter = ['plant', 'unit']
+    actions = ['export_as_csv']
+    
+    def export_as_csv(self, request, queryset):
+        meta = self.model._meta
+        field_names = [field.name for field in meta.fields]
+
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename={}.csv'.format(meta)
+        writer = csv.writer(response)
+
+        writer.writerow(field_names)
+        for obj in queryset:
+            writer.writerow([getattr(obj, field) for field in field_names])
+
+        return response
+    
+    export_as_csv.short_description = "Export selected as CSV"
+
 for model in [
-    Movie, 
-    MovieInstance, 
-    TVShow, 
-    TVShowEpisode, 
-    TVShowEpisodeInstance, 
-    EventMedication, 
-    EventExercise, 
-    AppSettings, 
-    ScheduleMedication, 
-    ScheduleExercise,
-    EventPlantWatering,
-    SchedulePlantWatering,
+    mdl.Movie, 
+    mdl.MovieInstance, 
+    mdl.TVShow, 
+    mdl.TVShowEpisode, 
+    mdl.TVShowEpisodeInstance, 
+    mdl.EventMedication, 
+    mdl.EventExercise, 
+    mdl.AppSettings, 
+    mdl.ScheduleMedication, 
+    mdl.ScheduleExercise,
+    mdl.SchedulePlantWatering,
     ]:
     # list_display
     # Custom
-    if model == AppSettings:
+    if model == mdl.AppSettings:
         list_display = ['key', 'value', 'value_type']
     else:
         # Default
@@ -37,12 +62,14 @@ for model in [
                 list_display.append(field.name)
     # list_filter
     # Custom
-    if model == EventMedication:
+    if model == mdl.EventMedication:
         list_filter = ['medication']
-    elif model == AppSettings:
+    elif model == mdl.AppSettings:
         list_filter = ['value_type']
-    elif model == MovieInstance:
+    elif model == mdl.MovieInstance:
         list_filter = ['movie', 'resolution', 'group']
+    elif model == mdl.EventPlantWatering:
+        list_filter = ['plant']
     else:
         # Default
         list_filter = []
