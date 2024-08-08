@@ -43,25 +43,24 @@ class HomeView(TemplateView):
         context = dict()
         tv_shows = list()
         parse_tv_feed(self.request)
-        # Get TV show Episodes that were added in the last x hours
-        cutoff_date = date.today() - timedelta(hours=AppSettings.get_key('tv_time_delta'))
-        tv_show_insta_query = TVShowEpisodeInstance.objects.filter(time_posted__gte=cutoff_date)
-        episode_set = set()
+        # Get last 30 days of episodes
+        tv_show_insta_query = TVShowEpisodeInstance.objects.filter(date_added__gte=date.today() - timedelta(days=30))
+        episode_dict = dict()
         for instance in tv_show_insta_query:
             episode = instance.episode
-            if f'{instance.episode.tv_show.title} S{episode.season:02d}E{episode.episode:02d}' in episode_set:
-                continue
-            tv_shows.append(
-                {
+            episode_dict[(episode.tv_show.title, episode.season, episode.episode)] = {
                     'show_name': instance.episode.tv_show.title,
                     'episode_name': instance.episode.title,
                     'favorite': instance.episode.tv_show.favorite,
                     'favorite_url': reverse('mark-show-favorite', args=[episode.tv_show.id]),
                     'episode_url': reverse('tv-show-episode', args=[episode.id]),
+                    'time_posted': instance.time_posted
                 }
-            )
-            episode_set.add(f'{episode.tv_show.title} S{episode.season:02d}E{episode.episode:02d}')
+        tv_shows = list(episode_dict.values())
+        tv_shows = sorted(tv_shows, key=lambda x: x['time_posted'], reverse=True)[:10]
         tv_shows = sorted(tv_shows, key=lambda x: x['show_name'], reverse=True)
+        for episode in tv_shows:
+            episode['time_posted'] = episode['time_posted'].strftime('%Y-%m-%d %H:%M')
         tv_shows = sorted(tv_shows, key=lambda x: int(x['favorite']), reverse=True)
         context['tv_shows'] = tv_shows
         return context

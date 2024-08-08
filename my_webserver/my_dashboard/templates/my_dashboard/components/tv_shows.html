@@ -18,6 +18,7 @@
             <tr>
               <th>Show Name</th>
               <th>Episode Name</th>
+              <th>Posted</th>
               <th>Favorite</th>
             </tr>
           </thead>
@@ -36,6 +37,7 @@
                 </a>
               </td>
               <td>{{ entry.episode_name }}</td>
+              <td>{{ entry.time_posted }}</td>
               <td>
                 {% if not entry.favorite %}
                 <a href="{{ entry.favorite_url }}"

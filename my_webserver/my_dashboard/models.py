@@ -355,7 +355,7 @@ class ScheduleMedication(models.Model):
             elif self.weekdays == [5,6]:
                 return f'{self.medication} - {self.method} - Weekends'
             else:
-                return f'{self.medication} - {self.method} - {", ".join([datetime.fromisoformat(str(day)).strftime("%A") for day in self.weekdays])}'
+                return f'{self.medication} - {self.method} - {", ".join(["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"][i] for i in self.weekdays)}'
         return f'{self.medication} - {self.method}'
 
     def is_satisfied(self):
