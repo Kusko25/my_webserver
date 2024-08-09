@@ -25,3 +25,6 @@ def call_external_tool(name, params=[], parseAsJson=False):
         return json.loads(output.stdout)
     else:
         return output.stdout
+
+def monitor_toggle(monitor:int=2):
+    call_external_tool('MultiMonitorTool.exe', ['/SwitchOffOn', str(monitor)])

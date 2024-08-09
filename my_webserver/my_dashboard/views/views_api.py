@@ -7,6 +7,7 @@ from rest_framework.parsers import JSONParser
 from django.utils import timezone
 
 from ..models import AppSettings
+from .utils import monitor_toggle
 
 from PyP100 import PyP110
 
@@ -22,8 +23,31 @@ class BaseJSONView(APIView):
         }, status=400)
         return response if missing else None
 
+class ControlMonitorView(BaseJSONView):
+    @property
+    def allowed_methods(self):
+        return ['GET']
+    def get(self,request):
+        monitor = request.GET.get('monitor',2)
+        try:
+            monitor_toggle(monitor)
+            return Response(
+                {'message':'success'},
+                status=200
+            )
+        except Exception as e:
+            logger.error("Execution of monitor_toggle failed with monitor " + str(monitor))
+            logger.error(str(e))
+            return Response(
+                {'message':'execution failed'},
+                status=500
+            )
+
 class ErrorView_404(BaseJSONView):
-    def dispatch(self, request, *args, **kwargs):
+    @property
+    def allowed_methods(self):
+        return ['GET']
+    def get(self, request, *args, **kwargs):
         data = {
             'message': 'Resource not found',
         }

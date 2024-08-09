@@ -2,7 +2,7 @@ from django.urls import reverse
 from logging import getLogger
 from ..models import AppSettings
 
-from ..utils import call_external_tool
+from ..utils import call_external_tool, monitor_toggle
 
 logger = getLogger(__name__)
 

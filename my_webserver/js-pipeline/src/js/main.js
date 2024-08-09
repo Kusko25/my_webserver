@@ -20,6 +20,23 @@ if (window.location.pathname === '/dashboard/') {
     refreshPage();
 }
 
+async function send_api_get(endpoint, params) {
+    const url='api/' + endpoint + params;
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Response status: ${response.status}`);
+        }
+    
+        const json = await response.json();
+        console.log(json);
+        return true
+      } catch (error) {
+        console.error(error.message);
+        return false
+      }
+}
+
 $(function() {
     // iterate over each element with the class 'datetimepicker'
     $('.datetimepicker').each(function() {
@@ -43,5 +60,16 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
     $('.collapse').on('hide.bs.collapse', function (e) {
         $(e.target).prev('.card-header').find('.bi-chevron-down').removeClass('rotate-90');
+    });
+    $('#monitor-switch-2').on('click', function() {
+        if (send_api_get('monitor_control','?monitor=2')) {
+            console.log(this)
+            if (this.classList.contains('bi-tv-fill')) {
+                this.classList.replace('bi-tv-fill', 'bi-tv');
+            }
+            else {
+                this.classList.replace('bi-tv', 'bi-tv-fill');
+            }
+        }
     });
 });
