@@ -1,83 +1,82 @@
-<div class="row align-items-start mb-3">
-  <div class="col-10">
-    <div class="card p-1">
-      <div class="card-header">
-        <h2>
-        {% if schedules_default_open %}
-          <a
-            data-bs-toggle="collapse"
-            href="#schedules-table"
-            class="link-body-emphasis link-offset-2 link-offset-3-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover">
-            <i class="rotatable-section-header bi bi-chevron-down pull-right"></i>
-            Schedules
-          </a>
-        {% else %}
-            <a
-                data-bs-toggle="collapse"
-                href="#schedules-table"
-                class="link-body-emphasis link-offset-2 link-offset-3-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover collapsed">
-                <i class="rotatable-section-header bi bi-chevron-down pull-right"></i>
+<div id="schedules-container">
+  <div class="row align-items-start mb-3">
+    <div class="col-10">
+      <div class="card py-1">
+        <div class="card-header row pb-2 mx-0">
+          <div class="col-11">
+            <h2>
+              <a data-bs-toggle="collapse" href="#schedules-table" class="link-body-emphasis link-offset-2 link-offset-3-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover{% if not schedules_default_open %} collapsed{% endif %}">
                 Schedules
-            </a>
-        {% endif %}
-        </h2>
-      </div>
-      {% if schedules_default_open %}
-      <div class="collapse show" id="schedules-table">
-      {% else %}
-      <div class="collapse" id="schedules-table">
-      {% endif %}
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Medication</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for row in medication_info %}
-                <tr class="{{row.variant}}">
-                <td>{{ row.medication }}</td>
-                <td>{{ row.expected }}</td>
-                <td>{{ row.message }}</td>
-                {% if row.fulfilled %}
-                  <td><i class="bi bi-check-square-fill link-dark"></i></td>
-                {% else %}
-                  <td><a href="{{ row.fulfill_link }}" class="link-dark"><i class="bi bi-check-square"></i></a></td>
-                {% endif %}
+                <i class="rotatable-section-header bi bi-chevron-down pull-left me-2"></i>
+              </a>
+            </h2>
+          </div>
+          <div class="col-1">
+            <h3 class="py-1 ms-5"><i id="schedules-container-refresh" class="fa bi bi-arrow-clockwise"></i></h3>
+          </div>
+        </div>
+
+        <div class="collapse{% if schedules_default_open %} show{% endif %}" id="schedules-table">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Medication</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in medication_info %}
+                <tr class="{{ row.variant }}">
+                  <td>{{ row.medication }}</td>
+                  <td>{{ row.expected }}</td>
+                  <td>{{ row.message }}</td>
+                  {% if row.fulfilled %}
+                    <td>
+                      <i class="bi bi-check-square-fill link-dark"></i>
+                    </td>
+                  {% else %}
+                    <td>
+                      <a href="{{ row.fulfill_link }}" class="link-dark"><i class="bi bi-check-square"></i></a>
+                    </td>
+                  {% endif %}
                 </tr>
-            {% endfor %}
-          </tbody>
-          <thead>
-            <tr>
-              <th>Exercises</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for row in exercise_info %}
-                <tr class="{{row.variant}}">
-                <td>{{ row.exercise }}</td>
-                <td>{{ row.expected }}</td>
-                <td>{{ row.message }}</td>
-                <td><a href="{{ row.fulfill_link }}" class="link-dark"><i class="bi bi-check-square"></i></a></td>
+              {% endfor %}
+            </tbody>
+            <thead>
+              <tr>
+                <th>Exercises</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in exercise_info %}
+                <tr class="{{ row.variant }}">
+                  <td>{{ row.exercise }}</td>
+                  <td>{{ row.expected }}</td>
+                  <td>{{ row.message }}</td>
+                  <td>
+                    <a href="{{ row.fulfill_link }}" class="link-dark"><i class="bi bi-check-square"></i></a>
+                  </td>
                 </tr>
-            {% endfor %}
-          </tbody>
-          <thead>
-            <tr>
-              <th>Plants</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for row in plant_info %}
-                <tr class="{{row.variant}}">
-                <td>{{ row.plant }}</td>
-                <td>{{ row.expected }}</td>
-                <td>{{ row.message }}</td>
-                <td><a href="{{ row.fulfill_link }}" class="link-dark"><i class="bi bi-check-square"></i></a></td>
+              {% endfor %}
+            </tbody>
+            <thead>
+              <tr>
+                <th>Plants</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in plant_info %}
+                <tr class="{{ row.variant }}">
+                  <td>{{ row.plant }}</td>
+                  <td>{{ row.expected }}</td>
+                  <td>{{ row.message }}</td>
+                  <td>
+                    <a href="{{ row.fulfill_link }}" class="link-dark"><i class="bi bi-check-square"></i></a>
+                  </td>
                 </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>

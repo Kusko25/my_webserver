@@ -158,7 +158,7 @@ def parse_movie_feed():
                 assert 'http' in new_object['link'],\
                 "Presumably invalid link"
                 movie_dict[new_object['movie_name']].append(new_object)
-            except:
+            except Exception as _:
                 logger.error(f'Error parsing movie feed entry: {year} {resolution} {group} {movie_name} {entry["link"]}')
                 continue # skip if any of the above fails. Regex is not to be trusted
             if cam:
@@ -209,12 +209,12 @@ def parse_movie_feed():
 def parse_tv_feed(request):
     url = AppSettings.get_key('tv_feed_url')
     if timezone.now() - AppSettings.get_key('tvshows_last_update') < timezone.timedelta(hours=AppSettings.get_key('tvshows_update_interval')):
-        return False
+        return False, InterruptedError('Update interval not reached')
     feed = fp.parse(url)
     if feed['bozo']:
         logger.error(f'Error parsing feed: {feed.bozo_exception}')
         messages.error(request,f'Error parsing feed: {feed.bozo_exception}')
-        return False
+        return False, feed.bozo_exception
     filters = AppSettings.get_key('tv_filters')
     show_dict = defaultdict(lambda:defaultdict(list))
     for entry in feed.entries:
@@ -249,7 +249,7 @@ def parse_tv_feed(request):
                 "Presumably invalid movie name"
                 assert 'http' in new_object['link'],\
                 "Presumably invalid link"
-            except:
+            except Exception as _:
                 logger.error(f'Error parsing tv feed entry: {show} {season} {episode} {resolution} {group} {entry["link"]}')
                 messages.warning(request,f'Error parsing tv feed entry: {show} {season} {episode} {resolution} {group} {entry["link"]}')
                 continue # skip if any of the above fails. Regex is not to be trusted
@@ -268,7 +268,7 @@ def parse_tv_feed(request):
     except Exception as e:
         logger.error(f'Error saving new shows to database: {e}')
         messages.error(request,f'Error saving new shows to database: {e}')
-        return e
+        return False, e
     
     new_episodes = []    
     # title = models.CharField(max_length=200)
@@ -297,7 +297,7 @@ def parse_tv_feed(request):
     except Exception as e:
         logger.error(f'Error saving new show episodes to database: {e}')
         messages.error(request,f'Error saving new show episodes to database: {e}')
-        return e
+        return False, e
     
     # episode = models.ForeignKey(TVShowEpisode, on_delete=models.CASCADE)
     # resolution = models.CharField(max_length=50, default='Unknown')
@@ -333,7 +333,7 @@ def parse_tv_feed(request):
     except Exception as e:
         logger.error(f'Error saving new show instances to database: {e}')
         messages.error(request,f'Error saving new show instances to database: {e}')
-        return e
+        return False, e
 
     AppSettings.set_key('tvshows_last_update',timezone.now())
-    return True
+    return True, None

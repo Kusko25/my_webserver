@@ -70,7 +70,7 @@ class AppSettingsManager(models.Manager):
         added_keys = False
         for key, value in self.defaults.items():
             if not prev_set_objects.filter(key=key).exists():
-                setting = AppSettings.objects.create(
+                AppSettings.objects.create(
                     key=key, 
                     value=value[0], 
                     value_type=value[1], 
@@ -95,7 +95,7 @@ class AppSettingsManager(models.Manager):
             return self.typecast[setting.value_type](setting.value)
         
     def set(self, key, value, value_type=None, profile='default'):
-        if value_type==None:
+        if value_type is None:
             if type(value) not in self.infer_type:
                 raise ValueError(f'Could not infer value_type from value: {value}')
             value_type = self.infer_type[type(value)]
@@ -109,7 +109,7 @@ class AppSettingsManager(models.Manager):
         # typecast value
         value = self.typecast_rev[value_type](value)
         # set key
-        setting = AppSettings.objects.create(
+        AppSettings.objects.create(
             key=key,
             value=value,
             value_type=value_type,

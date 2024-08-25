@@ -59,7 +59,7 @@ def defaultContext(active_item=None):
 
     return context
 
-def get_context_topbar():
+def get_headset_data():
         context = dict()
         try:        
             ## Headset Battery
@@ -68,47 +68,63 @@ def get_context_topbar():
                 logger.warning('More than one headset detected, defaulting to first one')
             for device in headset_info.get('devices', []):
                 # headset.name, headset.icon, headset.text
-                context['headset'] = {
+                context = {
                     'name': device.get('device', 'Unknown')
                 }
                 battery_status = device['battery']['status']
                 battery_level = device['battery']['level']
                 if battery_status == 'BATTERY_CHARGING':
-                    context['headset']['icon'] = 'battery-charging'
-                    context['headset']['text'] = 'Charging...' # During charging, level is always 100
+                    context['icon'] = 'battery-charging'
+                    context['text'] = 'Charging...' # During charging, level is always 100
                 elif battery_status == 'BATTERY_AVAILABLE':
                     if battery_level>85:
-                        context['headset']['icon'] = 'battery-full'
+                        context['icon'] = 'battery-full'
                     elif battery_level>35:
-                        context['headset']['icon'] = 'battery-half'
+                        context['icon'] = 'battery-half'
                     else:
-                        context['headset']['icon'] = 'battery'
-                    context['headset']['text'] = f'{battery_level}%'
+                        context['icon'] = 'battery'
+                    context['text'] = f'{battery_level}%'
                 else:
                     logger.warning(f'Unknown battery status: {battery_status}')
-                    context['headset']['icon'] = 'ban'
-                    context['headset']['text'] = 'Unknown'
+                    context['icon'] = 'ban'
+                    context['text'] = 'Unknown'
                 break
         except Exception as e:
             logger.error(f'Error while getting headset battery: {e}')
+            return None
+        return context
+
+def get_p110_data():
+    context = dict()
+    try:
+        ## PC Power Consumption
+        from PyP100 import PyP110
+        p110 = PyP110.P110(
+            address=AppSettings.get_key('p110_address'),
+            email=AppSettings.get_key('p110_email'),
+            password=AppSettings.get_key('p110_password')
+        )
+        energy_data = p110.getEnergyUsage()
+        context = {
+            "today": "Unknown",
+            "current": "Unknown"
+        }
+        if 'today_energy' in energy_data:
+            context['today'] = f"{energy_data['today_energy']/1000:.2f} kWh"
+        if 'current_power' in energy_data:
+            context['current'] = f"{energy_data['current_power']/1000:.2f} W"
+    except Exception as e:
+        logger.error(f'Error while getting PC power consumption: {e}')
+        return None
+    return context
+
+def get_context_topbar():
+    context = dict()
+    context['headset'] = get_headset_data()
+    if not context['headset']:
+        del context['headset']
+    context['pc_power'] = get_p110_data()
+    if not context['pc_power']:
+        del context['pc_power']
         
-        try:
-            ## PC Power Consumption
-            from PyP100 import PyP110
-            p110 = PyP110.P110(
-                address=AppSettings.get_key('p110_address'),
-                email=AppSettings.get_key('p110_email'),
-                password=AppSettings.get_key('p110_password')
-            )
-            energy_data = p110.getEnergyUsage()
-            context['pc_power'] = {
-                "today": "Unknown",
-                "current": "Unknown"
-            }
-            if 'today_energy' in energy_data:
-                context['pc_power']['today'] = f"{energy_data['today_energy']/1000:.2f} kWh"
-            if 'current_power' in energy_data:
-                context['pc_power']['current'] = f"{energy_data['current_power']/1000:.2f} W"
-        except Exception as e:
-            logger.error(f'Error while getting PC power consumption: {e}')
-        return {'topbar': context}
+    return {'topbar': context}

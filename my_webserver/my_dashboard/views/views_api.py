@@ -7,7 +7,8 @@ from rest_framework.parsers import JSONParser
 from django.utils import timezone
 
 from ..models import AppSettings
-from .utils import monitor_toggle
+from ..logic import parse_tv_feed
+from .utils import monitor_toggle, get_headset_data
 
 from PyP100 import PyP110
 
@@ -40,6 +41,68 @@ class ControlMonitorView(BaseJSONView):
             logger.error(str(e))
             return Response(
                 {'message':'execution failed'},
+                status=500
+            )
+
+class RefreshFeedsView(BaseJSONView):
+    @property
+    def allowed_methods(self):
+        return ['GET']
+    def get(self,request):
+        try:
+            result, exception = parse_tv_feed(request=request)
+            # result, exception = True, None
+            if result:
+                return Response(
+                    {'message':'success'},
+                    status=200
+                )
+            else:
+                return Response(
+                    {'message':'execution failed'},
+                    status=500
+                )
+        except Exception as e:
+            logger.error("Execution of parse_tv_feed failed")
+            logger.error(str(e))
+            return Response(
+                {'message':'execution failed with exception'},
+                status=500
+            )
+
+class RefreshGadgetView(BaseJSONView):
+    @property
+    def allowed_methods(self):
+        return ['GET']
+    def get(self,request):
+        switch = request.GET.get('gadget')
+        if switch is None:
+            return Response(
+                {'message':'missing parameter'},
+                status=400
+            )
+        try:
+            if switch == 'headset':
+                data = get_headset_data()
+                if not data:
+                    return Response(
+                        {'message':'execution failed'},
+                        status=500
+                    )
+                return Response(
+                    data,
+                    status=200
+                )
+            else:
+                return Response(
+                    {'message':'invalid parameter'},
+                    status=400
+                )
+        except Exception as e:
+            logger.error("Execution of get_headset_data failed")
+            logger.error(str(e))
+            return Response(
+                {'message':'execution failed with exception'},
                 status=500
             )
 

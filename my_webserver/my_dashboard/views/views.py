@@ -1,9 +1,10 @@
 from django.urls import reverse, reverse_lazy
 from django.views.generic import TemplateView, DetailView, FormView
+from django.shortcuts import render
 
 from ..models import AppSettings
 from ..models import Movie, MovieInstance, TVShowEpisodeInstance, TVShowEpisode, ScheduleMedication, ScheduleExercise, SchedulePlantWatering
-from ..logic import get_tv_schedule, parse_movie_feed, parse_tv_feed
+from ..logic import get_tv_schedule, parse_movie_feed
 from ..forms import MedicationEventForm
 
 from .utils import defaultContext, get_context_topbar
@@ -39,10 +40,11 @@ class HomeView(TemplateView):
         context['tv_shows'] = sorted(context['tv_shows'], key=lambda x: int(x['favorite']), reverse=True)
         return context
     
-    def get_context_tv_shows(self):
+    @staticmethod
+    def get_context_tv_shows():
         context = dict()
         tv_shows = list()
-        parse_tv_feed(self.request)
+        # parse_tv_feed(self.request)
         # Get last 30 days of episodes
         tv_show_insta_query = TVShowEpisodeInstance.objects.filter(date_added__gte=date.today() - timedelta(days=30))
         episode_dict = dict()
@@ -60,12 +62,16 @@ class HomeView(TemplateView):
         tv_shows = sorted(tv_shows, key=lambda x: x['time_posted'], reverse=True)[:10]
         tv_shows = sorted(tv_shows, key=lambda x: x['show_name'], reverse=True)
         for episode in tv_shows:
-            episode['time_posted'] = episode['time_posted'].strftime('%Y-%m-%d %H:%M')
+            if episode['time_posted'].date() == date.today():
+                episode['time_posted'] = "Today " + episode['time_posted'].strftime('%H:%M')
+            else:
+                episode['time_posted'] = episode['time_posted'].strftime('%Y-%m-%d %H:%M')
         tv_shows = sorted(tv_shows, key=lambda x: int(x['favorite']), reverse=True)
         context['tv_shows'] = tv_shows
         return context
 
-    def get_context_medication(self):
+    @staticmethod
+    def get_context_medication():
         context = dict()
         medication_info = list()
         default_open = False
@@ -128,7 +134,8 @@ class HomeView(TemplateView):
         context['medication_info'] = medication_info
         return context, default_open
     
-    def get_context_exercises(self):
+    @staticmethod
+    def get_context_exercises():
         context = dict()
         exercises = list()
         default_open = False
@@ -215,7 +222,8 @@ class HomeView(TemplateView):
             context['movies'].append(movie)
         return context
 
-    def get_context_plants(self):
+    @staticmethod
+    def get_context_plants():
         context = dict()
         plants = list()
         for schedule in SchedulePlantWatering.objects.all():
@@ -288,6 +296,19 @@ class HomeView(TemplateView):
 
         context['schedules_default_open'] = default_open
         return context
+
+def schedulesView(request):
+    context = dict()
+    context.update(HomeView.get_context_plants())
+    schedule_context, _ = HomeView.get_context_medication()
+    context.update(schedule_context)
+    exercise_context, _ = HomeView.get_context_exercises()
+    context.update(exercise_context)
+    context['schedules_default_open'] = True
+    return render(request, 'my_dashboard/components/schedules.html', context)
+def tvShowView(request):
+    context = HomeView.get_context_tv_shows()
+    return render(request, 'my_dashboard/components/tv_shows.html', context)
 
 class PowerMonitorView(TemplateView):
     template_name = 'my_dashboard/power_monitor.html'
