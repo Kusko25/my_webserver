@@ -42,11 +42,6 @@ def defaultContext(active_item=None):
             href=reverse('home')
     ))
     nav_items.append(sidebarItem(
-            text='Register Medication Event', 
-            icon='bi-plus',
-            href=reverse('event-register-medication')
-    ))
-    nav_items.append(sidebarItem(
         text='Power Monitor',
         icon='bi-speedometer2',
         href=reverse('power-monitor')

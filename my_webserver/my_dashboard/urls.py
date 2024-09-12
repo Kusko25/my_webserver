@@ -5,8 +5,8 @@ from .views import (
     MedicationEventFormView,
     TVShowEpisodeView,
     PowerMonitorView,
-    tvShowView,
-    schedulesView,
+    ExperimentView,
+    APIViews,
 )
 from .api.api_views import (
     mark_show_favorite,
@@ -66,8 +66,11 @@ urlpatterns = [
     path("api/monitor_control/", ControlMonitorView.as_view(), name="monitor-control"),
     path("api/update_rss/", RefreshFeedsView.as_view(), name="update-rss"),
     path("api/gadget_data/", RefreshGadgetView.as_view(), name="gadget-data"),
-    path("api/html/component/tv-shows/", tvShowView, name="comp-tv-shows"),
-    path("api/html/component/schedules/", schedulesView, name="comp-schedules"),
+    path("api/html/component/tv-shows/", APIViews.tvShowView, name="comp-tv-shows"),
+    path("api/html/component/schedules/", APIViews.schedulesView, name="comp-schedules"),
+    path("api/html/component/calories/", APIViews.caloriesView, name="comp-calories"),
+    path("api/form/<str:form_id>/", APIViews.FormView.as_view(), name="api-form"),
     # All 'api/' paths that weren't caught by the above paths will return a 404
     path("api/", ErrorView_404.as_view(), name="api-404"),
+    path("experiment/", ExperimentView.as_view(), name="experiment"),
 ]

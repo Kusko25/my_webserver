@@ -23,11 +23,13 @@ class AppSettingsManager(models.Manager):
             'movies_time_delta': (3, 'int'),
             'events_medication_csv_path': ('outputs/events/medication.csv', 'str'),
             'events_exercise_csv_path': ('outputs/events/exercise.csv', 'str'),
+            'events_calories_csv_path': ('outputs/events/calories.csv', 'str'),
             'ddlvalley_search_url': ('https://www.ddlvalley.me/?s={search_term}', 'str'),
             'tvshows_last_update': (timezone.now() - timedelta(days=7), 'datetime'),
             'tv_filters': ([], 'json'),
             'tv_feed_url': ('https://www.ddlvalley.me/category/tv-shows/feed/', 'str'),
             'tv_time_delta': (24, 'int'),
+            'calories_target': (2200, 'int'),
         }
         # For getting from db
         self.typecast = {
@@ -261,6 +263,54 @@ class Event(models.Model):
             ]
             csv_lines.append(','.join(line))
         return '\n'.join(csv_lines)
+
+class EventCalories(Event):
+    UNITS = (
+        ('kcal','Kilocalories'),
+    )
+    EVENT_TYPE = (
+        ('calories','Calories'),
+    )
+    event_type = models.CharField(max_length=200, choices=EVENT_TYPE, default='calories')
+    timestamp = models.DateTimeField(auto_now=True)
+    unit = models.CharField(max_length=200, choices=UNITS, default='kcal')
+    value = models.FloatField()
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        logger.info(f'New calorie event: {self}')
+        csv_path = AppSettings.get_key('events_calories_csv_path')
+        csv_path = Path(csv_path)
+        csv_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(csv_path, 'w') as f:
+            f.write(EventCalories.to_csv())
+        logger.info(f'Updated calorie event CSV: {csv_path.absolute()}')
+
+    def to_csv():
+        def clean_string(s):
+            s = str(s)
+            if ',' in s or '\n' in s:
+                s = s.replace('"','""')
+                s = '"' + s + '"'
+            return s
+        csv_lines = [
+            'timestamp,event_type,value,unit,description'
+        ]
+        for event in EventCalories.objects.all():
+            line = [
+                str(event.timestamp.timestamp()),
+                event.event_type,
+                clean_string(event.value),
+                event.unit,
+                clean_string(event.description),
+            ]
+            csv_lines.append(','.join(line))
+        return '\n'.join(csv_lines)
+
+    # def clean(self):
+    #     if self.timestamp.date() + timedelta(minutes=10) > datetime.now().date():
+    #         raise ValidationError('Cannot add calorie events in the future', code='future_date')
+    #     return super().clean()
 
 class EventMedication(Event):
     MEDICATIONS = (
@@ -573,6 +623,7 @@ class EventPlantWatering(Event):
         ('fern','Fern'),
         ('pepperplant','Pepper Plant'),
         ('potato','Potato'),
+        ('growbox','Grow Box'),
     )
     UNITS = (
         ('ml','Milliliters'),

@@ -58,10 +58,16 @@ class RefreshFeedsView(BaseJSONView):
                     status=200
                 )
             else:
-                return Response(
-                    {'message':'execution failed'},
-                    status=500
-                )
+                if isinstance(exception, InterruptedError):
+                    return Response(
+                        {'message':'Refresh interval not met'},
+                        status=200
+                    )
+                else:
+                    return Response(
+                        {'message':'execution failed'},
+                        status=500
+                    )
         except Exception as e:
             logger.error("Execution of parse_tv_feed failed")
             logger.error(str(e))

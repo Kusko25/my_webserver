@@ -3,7 +3,47 @@ from datetime import datetime
 from django import forms
 from django.utils import timezone
 
-from .models import EventMedication
+from .models import EventMedication, EventCalories, EventExercise
+
+class CalorieEventForm(forms.ModelForm):
+    class Meta:
+        model = EventCalories
+        fields = ['value', 'unit', 'description']
+        labels = {
+            'value': 'Amount',
+            'unit': 'Unit',
+            'description': 'Notes',
+        }
+        help_texts = {
+        }
+        error_messages = {
+        }
+
+class ExerciseEventForm(forms.ModelForm):
+    timestamp = forms.DateTimeField(
+        input_formats=['%d-%m-%Y %H:%M'],  # Add this line
+        widget=forms.DateTimeInput(
+            attrs={'class': 'datetimepicker'},
+            format='%d-%m-%Y %H:%M'
+        )
+    )
+    class Meta:
+        model = EventExercise
+        fields = ['timestamp', 'exercise', 'value', 'unit', 'description']
+        widgets = {
+            'exercise': forms.RadioSelect(),
+        }
+        labels = {
+            'timestamp': 'Date and Time',
+            'exercise': 'Exercise',
+            'value': 'Amount',
+            'unit': 'Unit',
+            'description': 'Notes',
+        }
+        help_texts = {
+        }
+        error_messages = {
+        }
 
 class MedicationEventForm(forms.ModelForm):
     timestamp = forms.DateTimeField(

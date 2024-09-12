@@ -36,6 +36,7 @@ for model in [
     mdl.TVShowEpisodeInstance, 
     mdl.EventMedication, 
     mdl.EventExercise, 
+    mdl.EventCalories,
     mdl.AppSettings, 
     mdl.ScheduleMedication, 
     mdl.ScheduleExercise,
@@ -55,6 +56,9 @@ for model in [
             if field.get_internal_type() == 'CharField':
                 list_display.append(field.name)
         for field in model._meta.fields:
+            if field.get_internal_type() == 'FloatField':
+                list_display.append(field.name)
+        for field in model._meta.fields:
             if field.get_internal_type() == 'DateField':
                 list_display.append(field.name)
         for field in model._meta.fields:
@@ -70,6 +74,8 @@ for model in [
         list_filter = ['movie', 'resolution', 'group']
     elif model == mdl.EventPlantWatering:
         list_filter = ['plant']
+    elif model == mdl.EventCalories:
+        list_filter = ['timestamp']
     else:
         # Default
         list_filter = []

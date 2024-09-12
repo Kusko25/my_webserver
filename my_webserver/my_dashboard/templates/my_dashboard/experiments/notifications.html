@@ -1,0 +1,42 @@
+<script>
+    // Request permission for notifications
+    function requestNotificationPermission() {
+        if (Notification.permission !== 'granted') {
+            Notification.requestPermission().then(function (permission) {
+                if (permission === 'granted') {
+                    console.log('Notification permission granted.');
+                }
+                else {
+                    console.log('Notification permission denied.');
+                }
+            });
+        }
+    }
+    // Send a notification
+    function sendNotification(message) {
+        if (Notification.permission === 'granted') {
+            var notification = new Notification('Notification', {
+                body: message,
+            });
+        }
+    }
+</script>
+{% block content %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col">
+                <h1>Notifications</h1>
+                <p>Click the button below to request permission for notifications.</p>
+                <button class="btn btn-primary" onclick="requestNotificationPermission()">Request Permission</button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <h2>Send Notification</h2>
+                <p>Enter a message and click the button below to send a notification.</p>
+                <input type="text" id="notification-message" class="form-control" placeholder="Message">
+                <button class="btn btn-primary" onclick="sendNotification(document.getElementById('notification-message').value)">Send Notification</button>
+            </div>
+        </div>
+    </div>
+{% endblock %}

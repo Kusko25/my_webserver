@@ -1,0 +1,22 @@
+<div id="navElCal">
+    <table class="table-sm">
+        <tbody>
+            <tr>
+                <td>
+                    <span id="navElCal-refresh" class="navbar-brand fw-bold text-{{calories.cal_level|default:"info"}}">{{calories.cal_count|default:"0"}}</span>
+                </td>
+                <td>
+                    <a class="navbar-link link-body-emphasis link-offset-2 link-offset-3-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover" id="navElCal-add50">+50</span>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <span class="navbar-text">/{{calories.cal_target|default:"2000"}}</span>
+                </td>
+                <td>
+                    <a id="navElCal-add100" class="navbar-link link-body-emphasis link-offset-2 link-offset-3-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover">+100</span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>

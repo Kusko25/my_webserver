@@ -55,9 +55,23 @@
   {% endfor %}
   </ul>
   <hr>
-  <div class="pb-3 d-flex flex-row">
-  <a href='#' class="nav-link flex-fill">
-    <i class="bi bi-tv-fill" id="monitor-switch-2"></i>
-  </a>
+  <div class="pb-3 btn-group" role="group">
+    <button type="button" class="btn btn-outline-light btn-sm">
+          <i class="bi bi-tv-fill" id="monitor-switch-2"></i>
+    </button>
+    <button type="button" class="btn btn-outline-light btn-sm">
+          <i class="bi bi-megaphone-fill" id="notifications-switch"></i>
+    </button>
+    {% for modal in modals %}
+    <button type="button" class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#{{modal.id}}">
+      {% if modal.icon %}
+        <i class="{{modal.icon}}"></i>
+      {% elif modal.button_text %}
+        {{modal.button_text}}
+      {% else %}
+        NO TEXT
+      {% endif %}
+    </button>
+    {% endfor %}
   </div>
 </div>
