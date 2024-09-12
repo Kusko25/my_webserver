@@ -2,6 +2,5 @@ secret*.json
 **/live_trying_things.ipynb
 **/*.pyc
 node_modules/
-my_webserver/outputs/events/medication.csv
-my_webserver/outputs/events/exercise.csv
+**/outputs/*
 db.sqlite3
