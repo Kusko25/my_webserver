@@ -284,10 +284,15 @@ class HomeView(TemplateView):
     @staticmethod
     def get_context_calories():
         context = dict()
+        # Cut-off everything since 4am
+        if timezone.now().hour < 4:
+            dt_cutoff = timezone.now().replace(hour=4, minute=0, second=0, microsecond=0) - timedelta(days=1)
+        else:
+            dt_cutoff = timezone.now().replace(hour=4, minute=0, second=0, microsecond=0)
         context["cal_count"] = int(
             sum(
                 x.value
-                for x in EventCalories.objects.filter(timestamp__gte=timezone.now()-timedelta(days=1))
+                for x in EventCalories.objects.filter(timestamp__gte=dt_cutoff)
             )
         )
         context["cal_target"] = AppSettings.get_key("calories_target")
