@@ -62,16 +62,38 @@
     <button type="button" class="btn btn-outline-light btn-sm">
           <i class="bi bi-megaphone-fill" id="notifications-switch"></i>
     </button>
+    <div class="btn-group">
+      <button type="button" class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#{{med_modal.id}}">
+        {% if med_modal.icon %}
+          <i class="{{med_modal.icon}}"></i>
+        {% elif med_modal.button_text %}
+          {{med_modal.button_text}}
+        {% else %}
+          NO TEXT
+        {% endif %}
+      </button>
+      <button type="button" class="btn btn-outline-light btn-sm dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown">
+        <span class="visually-hidden">Toggle Dropdown</span>
+      </button>
+      <ul class="dropdown-menu">
+        {% for med_entry in med_entries %}
+          <li><a class="dropdown-item" href="{{med_entry.link}}">{{med_entry.text}}</a></li>        
+        {% endfor %}
+      </ul>
+    </div>
     {% for modal in modals %}
+    {% if modal.skip_button %}
+    {% else %}
     <button type="button" class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#{{modal.id}}">
       {% if modal.icon %}
-        <i class="{{modal.icon}}"></i>
+      <i class="{{modal.icon}}"></i>
       {% elif modal.button_text %}
-        {{modal.button_text}}
+      {{modal.button_text}}
       {% else %}
-        NO TEXT
+      NO TEXT
       {% endif %}
     </button>
+    {% endif %}
     {% endfor %}
   </div>
 </div>

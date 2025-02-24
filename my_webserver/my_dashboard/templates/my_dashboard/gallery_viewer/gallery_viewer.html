@@ -1,0 +1,57 @@
+{% extends "my_dashboard/base.html" %}
+{% load django_bootstrap5 %}
+{% load static %}
+
+{% block styles %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/webpack/gallery_viewer-index-bundle.css' %}">
+{% endblock styles %}
+
+
+{% block content %}
+    {% csrf_token %}
+    <div class="row card m-1">
+        {% if gallery.active %}
+            <div class="col">
+                <div class="row vh-100">
+                    <div class="col-1 d-flex flex-column justify-content-center align-items-center">
+                        <a href="#" id="gallery_prev">
+                            <i class="bi bi-chevron-left fs-1"></i>
+                        </a>
+                    </div>
+                    <div class="col-10 d-flex flex-column justify-content-center align-items-center">
+                        <div class="spinner-border spinner-overlay spinner-disabled" id="gallery_load_indicator"></div>
+                        <img src="{{gallery.img_url}}" class="img-fluid" id="gallery_img">
+                    </div>
+                    <div class="col-1 d-flex flex-column justify-content-center align-items-center">
+                        <a href="#" id="gallery_next">
+                            <i class="bi bi-chevron-right fs-1"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="d-flex flex-column justify-content-center align-items-center">
+                <h2 id="gallery_title">{{gallery.title}}</h2>
+                <span>Source: <a href="{{gallery.url}}" id="gallery_src">{{gallery.url}}</a></span>
+                <span><span id="gallery_index">1</span>/<span id="gallery_count">{{gallery.length}}</span></span>
+                </div>
+            </div>
+            {% else %}
+            <div class="col">
+                <h2>Gallery is not active</h2>
+            </div>
+        {% endif %}
+    </div>
+    <div class="row card m-1">
+        <div class="col">
+            <form method="post">
+                {% csrf_token %}
+                {% bootstrap_field form.url addon_after='<button type="submit" class="btn btn-outline-secondary">OK</button>' addon_after_class=None %}
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script src="{% static 'js/webpack/gallery_viewer-index-bundle.js' %}"></script>
+{% endblock scripts %}

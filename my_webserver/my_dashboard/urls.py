@@ -7,12 +7,15 @@ from .views import (
     PowerMonitorView,
     ExperimentView,
     APIViews,
+    GalleryView,
+    GalleryViewerAPI,
 )
 from .api.api_views import (
     mark_show_favorite,
     mark_schedule_fulfilled_medication,
     mark_schedule_fulfilled_exercise,
     mark_schedule_fulfilled_plant,
+    register_medication_event,
 )
 from .views.views_api import (
     ErrorView_404,
@@ -26,6 +29,7 @@ from .views.views_api import (
 urlpatterns = [
     path("", HomeView.as_view(), name="home"),
     path("power_monitor/", PowerMonitorView.as_view(), name="power-monitor"),
+    path("gallery_viewer/", GalleryView.as_view(), name="gallery-viewer"),
     path("movies/<int:pk>/", MovieView.as_view(), name="movie"),
     path(
         "tv_shows/episode/<int:pk>/",
@@ -37,10 +41,16 @@ urlpatterns = [
         MedicationEventFormView.as_view(),
         name="event-register-medication",
     ),
+    path("api/gallery/parse/", GalleryViewerAPI.as_view(), name="gallery-parse"),
     path(
         "api/mark_show_favorite/<int:show_id>/",
         mark_show_favorite,
         name="mark-show-favorite",
+    ),
+    path(
+        "api/medication/event/register/",
+        register_medication_event,
+        name="register-medication-event",
     ),
     path(
         "api/medication/schedule/fulfill/<int:pk>/",

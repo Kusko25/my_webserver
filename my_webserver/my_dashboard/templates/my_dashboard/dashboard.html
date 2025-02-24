@@ -9,21 +9,3 @@
     {% include "my_dashboard/components/tv_shows.html" %}
     {% include "my_dashboard/components/movies.html" %}
 {% endblock %}
-
-{% block modals %}
-    {% for modal in modals %}
-        {% include "my_dashboard/components/form_modal.html" with modal=modal %}
-    {% endfor %}
-{% endblock %}
-
-{% block scripts %}
-    <script>
-        var modal_ids = [];
-    </script>
-    {% for modal in modals %}
-        <script>
-            modal_ids.push("{{ modal.id }}");
-        </script>
-    {% endfor %}
-    {{ block.super }}
-{% endblock %}

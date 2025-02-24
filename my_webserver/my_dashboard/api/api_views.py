@@ -1,8 +1,9 @@
 from django.http import HttpResponseRedirect
 from django.urls import reverse
+from django.utils import timezone
+from django.contrib import messages
 
-from rest_framework import status
-from ..models import TVShow, ScheduleMedication, ScheduleExercise, SchedulePlantWatering
+from ..models import TVShow, ScheduleMedication, ScheduleExercise, SchedulePlantWatering, EventMedication
 
 import logging
 
@@ -39,4 +40,38 @@ def mark_schedule_fulfilled_plant(request, pk):
     """Mark a MedicationSchedule as fulfilled."""
     schedule = SchedulePlantWatering.objects.get(pk=pk)
     schedule.fulfill()
+    return HttpResponseRedirect(reverse('home'))
+
+def register_medication_event(request):
+    """Register a medication event."""
+    medication = request.GET.get('medication')
+    unit = request.GET.get('unit')
+    amount = request.GET.get('amount')
+    time = timezone.now()
+    
+    try:
+        amount = float(amount)
+    except ValueError:
+        logger.error('Invalid amount')
+        messages.error(request, 'Invalid amount')
+        return HttpResponseRedirect(reverse('home'))
+    
+    if not all([medication, unit, amount]):
+        logger.error('Missing parameters')
+        messages.error(request, 'Missing parameters')
+        return HttpResponseRedirect(reverse('home'))
+    
+    event = EventMedication(
+        medication=medication,
+        unit=unit,
+        value=amount,
+        timestamp=time,
+    )
+    
+    try:
+        event.save()
+    except Exception as e:
+        logger.error(f'Error saving event: {e}')
+        messages.error(request, 'Error saving event')
+        return HttpResponseRedirect(reverse('home'))
     return HttpResponseRedirect(reverse('home'))

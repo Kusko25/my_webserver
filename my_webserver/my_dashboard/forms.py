@@ -3,7 +3,23 @@ from datetime import datetime
 from django import forms
 from django.utils import timezone
 
+from urllib.parse import urlparse
+
 from .models import EventMedication, EventCalories, EventExercise
+
+class GalleryViewerUrlForm(forms.Form):
+    url = forms.URLField(label='URL', required=True)
+    
+    def clean_url(self):
+        supported_domains = [
+            'nortverse.com',
+            'e-hentai.org',
+        ]
+        url = self.cleaned_data['url']
+        parsed_url = urlparse(url)
+        if parsed_url.netloc not in supported_domains:
+            raise forms.ValidationError('Unsupported domain')
+        return url
 
 class CalorieEventForm(forms.ModelForm):
     class Meta:

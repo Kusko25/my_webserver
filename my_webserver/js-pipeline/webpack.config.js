@@ -11,7 +11,8 @@ module.exports = {
   ],
   entry: {
     main: './src/js/main.js',
-    power_monitor: './src/js/power_monitor.js'
+    power_monitor: './src/js/power_monitor.js',
+    gallery_viewer: './src/js/gallery_viewer.js',
   },
   output: {
     filename: 'js/webpack/[name]-index-bundle.js',  // output bundle file name

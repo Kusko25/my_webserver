@@ -25,33 +25,6 @@ def sidebarItem(text='', icon=None, href=None, dropdown_list=None, dropdown_id=N
 def defaultContext(active_item=None):
     context = dict()
     context['title'] = 'My Dashboard'
-
-    # Sidebar
-    id_counter_dropdown = 0
-    sidebar = dict()
-    sidebar['title'] = 'Menu'
-    nav_items = list()
-    nav_items.append(sidebarItem(
-            text='Admin', 
-            icon='bi-archive', 
-            href=reverse('admin:index')
-    ))
-    nav_items.append(sidebarItem(
-            text='Home', 
-            icon='bi-house', 
-            href=reverse('home')
-    ))
-    nav_items.append(sidebarItem(
-        text='Power Monitor',
-        icon='bi-speedometer2',
-        href=reverse('power-monitor')
-    ))
-    if active_item is not None and active_item=='Movies':
-        nav_items[-1]['active'] = 'active'
-    id_counter_dropdown += 1
-    sidebar['nav_items'] = nav_items
-    context['sidebar'] = sidebar
-
     return context
 
 def get_headset_data():

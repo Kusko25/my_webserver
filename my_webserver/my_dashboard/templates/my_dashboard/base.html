@@ -11,6 +11,11 @@
     {% block styles %}
     <link rel="stylesheet" href="{% static 'css/webpack/main-index-bundle.css' %}">
     {% endblock styles %}
+    {% if js_data %}
+    <script>
+      const js_data = JSON.parse('{{ js_data|escapejs }}');
+    </script>
+    {% endif %}
 </head>
 <body>
     <div class="container-fluid">
@@ -24,10 +29,24 @@
           {% endblock messages %}
           {% block content %}
           {% endblock content %}
-          {% block modals %}{% endblock modals %}
+          {% block modals %}
+          {% for modal in modals %}
+              {% include "my_dashboard/components/form_modal.html" with modal=modal %}
+          {% endfor %}
+          {% endblock modals %}
         </div>
       </div>
     </div>
+    {% if modals %}
+      <script>
+        var modal_ids = [];
+      </script>
+      {% for modal in modals %}
+        <script>
+          modal_ids.push("{{ modal.id }}");
+        </script>
+      {% endfor %}
+    {% endif %}
     {% block scripts %}
     {% load static %}
     <script src="{% static 'js/webpack/main-index-bundle.js' %}"></script>

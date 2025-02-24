@@ -46,6 +46,8 @@ for model in [
     # Custom
     if model == mdl.AppSettings:
         list_display = ['key', 'value', 'value_type']
+    elif model == mdl.EventCalories:
+        list_display = ['value', 'unit', 'timestamp', 'description']
     else:
         # Default
         list_display = []

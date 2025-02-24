@@ -19,7 +19,7 @@ from ..models import (
 from ..logic import get_tv_schedule, parse_movie_feed
 from ..forms import MedicationEventForm, CalorieEventForm, ExerciseEventForm
 
-from .utils import defaultContext, get_context_topbar
+from .utils import defaultContext, get_context_topbar, sidebarItem
 
 from datetime import date, timedelta
 from logging import getLogger
@@ -28,8 +28,97 @@ logger = getLogger(__name__)
 
 # Create your views here.
 
+class SidebarMixin:
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Sidebar
+        id_counter_dropdown = 0
+        sidebar = dict()
+        sidebar['title'] = 'Menu'
+        nav_items = list()
+        nav_items.append(sidebarItem(
+                text='Admin', 
+                icon='bi-archive', 
+                href=reverse('admin:index')
+        ))
+        nav_items.append(sidebarItem(
+                text='Home', 
+                icon='bi-house', 
+                href=reverse('home')
+        ))
+        nav_items.append(sidebarItem(
+            text='Power Monitor',
+            icon='bi-speedometer2',
+            href=reverse('power-monitor')
+        ))
+        nav_items.append(sidebarItem(
+            text='Gallery Viewer',
+            icon='bi-images',
+            href=reverse('gallery-viewer')
+        ))
+        id_counter_dropdown += 1
+        sidebar['nav_items'] = nav_items
+        context['sidebar'] = sidebar
+        context = self.get_context_form_modals(context)
+        return context
+    
+    def get_context_form_modals(self, context):
+        modals:list = context.get("modals", [])
+        modals.append(
+            {
+                "title": "Register Medication Event",
+                "id": "modal-register-medication",
+                "form": MedicationEventForm(),
+                "icon": "bi bi-capsule",
+                "action": reverse("api-form", args=["modal-register-medication"]),
+                "skip_button": True,
+            }
+        )
+        context["med_modal"] = modals[-1]
+        
+        modals.append(
+            {
+                "title": "Register Calories Event",
+                "id": "modal-register-calories",
+                "form": CalorieEventForm(),
+                "icon": "bi bi-fire",
+                "action": reverse("api-form", args=["modal-register-calories"]),
+            }
+        )
+        modals.append(
+            {
+                "title": "Register Exercise Event",
+                "id": "modal-register-exercise",
+                "form": ExerciseEventForm(),
+                "icon": "bi bi-lungs-fill",
+                "action": reverse("api-form", args=["modal-register-exercise"]),
+            }
+        )
+        
+        context["modals"] = modals
+        
+        context["med_entries"] = [
+            {
+                "text" : "RamiDipin - 10mg",
+                "link" : reverse("register-medication-event") + "?medication=ramidipin&unit=mg&amount=10",
+            },
+            {
+                "text" : "Atorvastatin - 10mg",
+                "link" : reverse("register-medication-event") + "?medication=atorvastatin&unit=mg&amount=10",
+            },
+            {
+                "text" : "Medikinet - 10mg",
+                "link" : reverse("register-medication-event") + "?medication=medikinet&unit=mg&amount=10",
+            },
+            {
+                "text" : "Medikinet - 30mg",
+                "link" : reverse("register-medication-event") + "?medication=medikinet&unit=mg&amount=30",
+            },
+        ]
+        return context
 
-class HomeView(TemplateView):
+
+class HomeView(SidebarMixin, TemplateView):
     template_name = "my_dashboard/dashboard.html"
 
     def get_context_tv_shows_pogdesign(self):
@@ -381,38 +470,7 @@ class HomeView(TemplateView):
         context["plant_info"] = plants
         return context
 
-    def get_context_form_modals(self, context):
-        modals:list = context.get("modals", [])
-        modals.append(
-            {
-                "title": "Register Medication Event",
-                "id": "modal-register-medication",
-                "form": MedicationEventForm(),
-                "icon": "bi bi-capsule",
-                "action": reverse("api-form", args=["modal-register-medication"]),
-            }
-        )
-        modals.append(
-            {
-                "title": "Register Calories Event",
-                "id": "modal-register-calories",
-                "form": CalorieEventForm(),
-                "icon": "bi bi-fire",
-                "action": reverse("api-form", args=["modal-register-calories"]),
-            }
-        )
-        modals.append(
-            {
-                "title": "Register Exercise Event",
-                "id": "modal-register-exercise",
-                "form": ExerciseEventForm(),
-                "icon": "bi bi-lungs-fill",
-                "action": reverse("api-form", args=["modal-register-exercise"]),
-            }
-        )
-        
-        context["modals"] = modals
-        return context
+
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -427,7 +485,6 @@ class HomeView(TemplateView):
         context.update(exercise_context)
 
         context.update(self.get_context_calories())
-        context = self.get_context_form_modals(context)
 
         context["schedules_default_open"] = True
         return context
