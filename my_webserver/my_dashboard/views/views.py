@@ -1,5 +1,5 @@
 from django.urls import reverse, reverse_lazy
-from django.views.generic import TemplateView, DetailView, FormView, View
+from django.views.generic import TemplateView, DetailView, FormView
 from django.shortcuts import render
 from django.utils import timezone
 from rest_framework.views import APIView

@@ -60,11 +60,11 @@ async function api_call(data_url, data_index) {
     else {
         current = null;
     }
-    console.log('API call successful');
+    // console.log('API call successful');
 }
 
 async function handle_next_click() {
-    console.log('Next clicked');
+    // console.log('Next clicked');
     if (next_url === null) {
         return;
     }
@@ -82,7 +82,7 @@ async function handle_next_click() {
 }
 
 async function handle_prev_click() {
-    console.log('Prev clicked');
+    // console.log('Prev clicked');
     if (prev_url === null) {
         return;
     }
@@ -100,7 +100,7 @@ async function handle_prev_click() {
 }
 
 function handle_img_click() {
-    console.log('Image clicked');
+    // console.log('Image clicked');
     // Iter through classes img-fluid, img-scaled, img-full
     let img = $('#gallery_img');
     if (img.hasClass('img-fluid')) {
@@ -118,14 +118,14 @@ function handle_img_click() {
 }
 
 function update_html() {
-    console.log('Updating HTML');
-    console.log('img_url:', img_url);
-    console.log('length:', length);
-    console.log('index:', index);
-    console.log('next_url:', next_url);
-    console.log('prev_url:', prev_url);
-    console.log('title:', title);
-    console.log('src:', src);
+    // console.log('Updating HTML');
+    // console.log('img_url:', img_url);
+    // console.log('length:', length);
+    // console.log('index:', index);
+    // console.log('next_url:', next_url);
+    // console.log('prev_url:', prev_url);
+    // console.log('title:', title);
+    // console.log('src:', src);
 
     $('#gallery_img').attr('src', img_url);
     $('#gallery_img').attr('alt', img_url);
@@ -167,10 +167,10 @@ function update_html() {
 
 $(function() {
     if (!active) {
-        console.log('Gallery is not active');
+        // console.log('Gallery is not active');
         return;
     }
-    console.log('Gallery is active, setting up event listeners');
+    // console.log('Gallery is active, setting up event listeners');
     $('#gallery_next').on('click', handle_next_click);
     $('#gallery_prev').on('click', handle_prev_click);
     // Register left and right arrow key press events

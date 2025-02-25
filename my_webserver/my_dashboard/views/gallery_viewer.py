@@ -34,7 +34,6 @@ class GalleryViewerAPI(APIView):
         index = request.data.get('index',0)
         gallery = GalleryViewerAPI.parse_url(url, index)
         response = Response(gallery)
-        print(url,index,response, response.data)
         return response
     
     @classmethod
