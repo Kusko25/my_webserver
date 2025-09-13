@@ -5,7 +5,13 @@ const api_url = js_data['gallery']['api_url'];
 var active = js_data['gallery']['active'];
 if (active) {
     var img_url = js_data['gallery']['img_url'];
-    // var img_alt = data['gallery']['img_alt'];
+    // next_img_url if present
+    if ('next_img_url' in js_data['gallery']) {
+        var next_img_url = js_data['gallery']['next_img_url'];
+    }
+    else {
+        var next_img_url = null;
+    }
     var length = js_data['gallery']['length'];
     var index = 0;
     var next_url = js_data['gallery']['next_url'];
@@ -49,6 +55,9 @@ async function api_call(data_url, data_index) {
     });
     let resp_data = await response.json();
     img_url = resp_data['img_url'];
+    if ('next_img_url' in resp_data) {
+        next_img_url = resp_data['next_img_url'];
+    }
     length = resp_data['length'];
     next_url = resp_data['next_url'];
     prev_url = resp_data['prev_url'];
@@ -127,8 +136,11 @@ function update_html() {
     // console.log('title:', title);
     // console.log('src:', src);
 
+    
     $('#gallery_img').attr('src', img_url);
     $('#gallery_img').attr('alt', img_url);
+    $('#gallery_next_img').attr('src', next_img_url); // For preloading the next image
+    $
     if (loading) {
         $('#gallery_img').addClass('img-loading');
         $('#gallery_load_indicator').removeClass('spinner-disabled');

@@ -89,7 +89,7 @@ class GalleryViewerAPI(APIView):
         return gallery
     
     @classmethod
-    def parse_e_hentai_org(cls, url):
+    def parse_e_hentai_org(cls, url, get_next=True):
         """Parse the URL of an E-Hentai gallery."""
         parsed_url = urlparse(url)
         if '/g/' in parsed_url.path:
@@ -123,6 +123,9 @@ class GalleryViewerAPI(APIView):
             gallery['prev_url'] = gallery['prev_url']['href']
         if gallery['prev_url'] == url:
             gallery['prev_url'] = None
+        
+        if gallery.get('next_url') and get_next:
+            gallery['next_img_url'] = cls.parse_e_hentai_org(gallery['next_url'], get_next=False)['img_url']
         return gallery
     
     @staticmethod

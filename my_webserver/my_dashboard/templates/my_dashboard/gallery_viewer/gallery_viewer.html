@@ -29,6 +29,10 @@
                         </a>
                     </div>
                 </div>
+                {% comment %} Hidden preview of next image to cache ahead of time {% endcomment %}
+                {% if gallery.next_img_url %}
+                    <img src="{{gallery.next_img_url}}" class="d-none" id="gallery_next_img">
+                {% endif %}
                 <div class="d-flex flex-column justify-content-center align-items-center">
                 <h2 id="gallery_title">{{gallery.title}}</h2>
                 <span>Source: <a href="{{gallery.url}}" id="gallery_src">{{gallery.url}}</a></span>
