@@ -681,7 +681,8 @@ class SchedulePlantWatering(models.Model):
             elif self.weekdays == [5,6]:
                 return f'{self.plant} - {self.method} - Weekends'
             else:
-                return f'{self.plant} - {self.method} - {", ".join([datetime.fromisoformat(str(day)).strftime("%A") for day in self.weekdays])}'
+                # Weekday are represented as 0=Monday, 1=Tuesday, ..., 6=Sunday, turn that into actual names
+                return f'{self.plant} - {self.method} - {", ".join([datetime.fromisoformat(f"2025-02-{3+day:02}").strftime("%A") for day in self.weekdays])}'
         return f'{self.plant} - {self.method}'
 
     def is_satisfied(self):
