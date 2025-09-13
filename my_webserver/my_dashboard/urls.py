@@ -10,6 +10,7 @@ from .views import (
     GalleryView,
     GalleryViewerAPI,
 )
+from .views.rss.read_comics_online import StarTrekLowerDecks2024
 from .api.api_views import (
     mark_show_favorite,
     mark_schedule_fulfilled_medication,
@@ -41,6 +42,10 @@ urlpatterns = [
         MedicationEventFormView.as_view(),
         name="event-register-medication",
     ),
+    path("experiment/", ExperimentView.as_view(), name="experiment"),
+]
+# api paths
+urlpatterns += [
     path("api/gallery/parse/", GalleryViewerAPI.as_view(), name="gallery-parse"),
     path(
         "api/mark_show_favorite/<int:show_id>/",
@@ -82,5 +87,9 @@ urlpatterns = [
     path("api/form/<str:form_id>/", APIViews.FormView.as_view(), name="api-form"),
     # All 'api/' paths that weren't caught by the above paths will return a 404
     path("api/", ErrorView_404.as_view(), name="api-404"),
-    path("experiment/", ExperimentView.as_view(), name="experiment"),
+]
+# rss paths
+urlpatterns += [
+    # http://127.0.0.1:5000/rss/star-trek-lower-decks-2024
+    path("rss/star-trek-lower-decks-2024/", StarTrekLowerDecks2024.view, name="rss-star-trek-lower-decks-2024"),
 ]
