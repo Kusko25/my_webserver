@@ -1,0 +1,6 @@
+__all__ = [
+    'FRONTEND_TITLE_DEFAULT',
+    'FRONTEND_TITLE_TEMPLATE'
+]
+FRONTEND_TITLE_DEFAULT = "My Dashboard"
+FRONTEND_TITLE_TEMPLATE = "Dashboard - %s"

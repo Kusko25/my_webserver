@@ -69,6 +69,9 @@ async function api_call(data_url, data_index) {
     else {
         current = null;
     }
+    if ('page_title' in resp_data) {
+        document.title = resp_data['page_title'];
+    }
     // console.log('API call successful');
 }
 

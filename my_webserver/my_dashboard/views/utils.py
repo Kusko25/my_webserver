@@ -1,8 +1,13 @@
 from django.urls import reverse
 from logging import getLogger
+from typing import Optional
 from ..models import AppSettings
 
 from ..utils import call_external_tool, monitor_toggle
+from PyP100 import PyP110
+from scapy.layers.l2 import ARP, Ether
+from scapy.sendrecv import srp
+from ..variables import FRONTEND_TITLE_DEFAULT
 
 logger = getLogger(__name__)
 
@@ -24,7 +29,7 @@ def sidebarItem(text='', icon=None, href=None, dropdown_list=None, dropdown_id=N
 
 def defaultContext(active_item=None):
     context = dict()
-    context['title'] = 'My Dashboard'
+    context['title'] = FRONTEND_TITLE_DEFAULT
     return context
 
 def get_headset_data():
@@ -32,6 +37,7 @@ def get_headset_data():
         try:        
             ## Headset Battery
             headset_info = call_external_tool('headsetcontrol.exe', ['-o', 'json'], parseAsJson=True)
+            assert isinstance(headset_info, dict)
             if len(headset_info.get('devices', [])) > 1:
                 logger.warning('More than one headset detected, defaulting to first one')
             for device in headset_info.get('devices', []):
@@ -63,12 +69,29 @@ def get_headset_data():
         return context
 
 def get_p110_data():
+    def get_ip(mac_address) -> Optional[str]:
+        ip = "192.168.0.0/24"
+        arp_request = ARP(pdst=ip)
+        # Ethernet frame to broadcast the ARP
+        broadcast = Ether(dst="ff:ff:ff:ff:ff:ff")
+        # Combine the two
+        arp_request_broadcast = broadcast / arp_request
+        # Send request and receive response
+        answered_list = srp(arp_request_broadcast, timeout=1, verbose=False)[0]
+        for element in answered_list:
+            if element[1].hwsrc == mac_address:
+                return element[1].psrc
+        return None
+    
     context = dict()
     try:
         ## PC Power Consumption
-        from PyP100 import PyP110
+        p110_ip = get_ip(AppSettings.get_key("p110_address"))
+        if p110_ip is None:
+            logger.warning("P110 not found on network")
+            return None
         p110 = PyP110.P110(
-            address=AppSettings.get_key('p110_address'),
+            address=p110_ip,
             email=AppSettings.get_key('p110_email'),
             password=AppSettings.get_key('p110_password')
         )

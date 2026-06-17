@@ -4,3 +4,5 @@ secret*.json
 node_modules/
 **/outputs/*
 db.sqlite3
+my_webserver/uv.lock
+my_webserver/webserver.log*

@@ -16,7 +16,6 @@ import json
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
@@ -24,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 try:
     with open(BASE_DIR / "secret_config.json") as f:
         SECRET_KEY = json.load(f)["DJANGO_SECRET_KEY"]
-except:
+except Exception:
     SECRET_KEY = None
 assert SECRET_KEY, "DJANGO_SECRET_KEY not found in secret_config.json"
 
@@ -33,6 +32,41 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
+            "style": "{",
+        },
+        "simple": {
+            "format": "{levelname} {message}",
+            "style": "{",
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': 'webserver.log',
+            'formatter': 'verbose',
+            'backupCount': 2,
+            'maxBytes': 1024*1024*2,
+        },
+        "console": {
+            "class": "logging.StreamHandler",
+            'formatter': 'verbose'
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file', "console"],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
 
 # Application definition
 

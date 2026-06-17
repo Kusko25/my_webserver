@@ -136,11 +136,13 @@ class AppSettings(models.Model):
     objects = models.Manager()
     c_objects = AppSettingsManager()
 
-    def get_key(key, profile='default'):
-        return AppSettings.c_objects.get(key=key, profile=profile)
+    @classmethod
+    def get_key(cls, key:str, profile='default'):
+        return cls.c_objects.get(key=key, profile=profile)
     
-    def set_key(key, value, value_type=None, profile='default'):
-        AppSettings.c_objects.set(key, value, value_type, profile)
+    @classmethod
+    def set_key(cls, key:str, value, value_type=None, profile='default'):
+        cls.c_objects.set(key, value, value_type, profile)
 
 
     def __str__(self):

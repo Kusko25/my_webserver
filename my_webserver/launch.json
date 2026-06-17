@@ -3,7 +3,7 @@
     "configurations": [
         {
             "name": "Python: Django",
-            "python_path": "\\..\\.conda\\python.exe",
+            "python_path": "\\.venv\\Scripts\\python.exe",
             "program": "\\manage.py",
             "args": [
                 "runserver",

@@ -1,6 +1,7 @@
 import subprocess
 import json
 from pathlib import Path
+from typing import Union
 
 def process_show_name(show_name):
     processed_show_name = ""
@@ -14,7 +15,7 @@ def process_show_name(show_name):
 
     return processed_show_name
 
-def call_external_tool(name, params=[], parseAsJson=False):
+def call_external_tool(name, params=[], parseAsJson=False) -> Union[bytes,dict]:
     path = Path(__file__).parent / "external_tools" / name
     if not path.exists():
         raise FileNotFoundError(f"External tool '{name}' not found.")

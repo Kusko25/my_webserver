@@ -1,0 +1,22 @@
+[project]
+name = "my-webserver"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "beautifulsoup4>=4.14.3",
+    "colorama>=0.4.6",
+    "django>=6.0.2",
+    "django-bootstrap5>=26.2",
+    "djangorestframework>=3.16.1",
+    "feedparser>=6.0.12",
+    "ipykernel>=7.2.0",
+    "ipython>=9.10.0",
+    "pyp100",
+    "requests>=2.32.5",
+    "scapy>=2.7.0",
+]
+
+[tool.uv.sources]
+pyp100 = { git = "https://github.com/almottier/TapoP100.git", rev = "main" }

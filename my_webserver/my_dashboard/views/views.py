@@ -20,6 +20,7 @@ from ..logic import get_tv_schedule, parse_movie_feed
 from ..forms import MedicationEventForm, CalorieEventForm, ExerciseEventForm
 
 from .utils import defaultContext, get_context_topbar, sidebarItem
+from ..variables import FRONTEND_TITLE_TEMPLATE
 
 from datetime import date, timedelta
 from logging import getLogger
@@ -550,6 +551,7 @@ class PowerMonitorView(TemplateView):
         context.update(defaultContext())
         context.update(get_context_topbar())
         context["page_heading"] = "Power Monitor"
+        context["title"] = FRONTEND_TITLE_TEMPLATE % "Power Monitor"
         return context
 
 class MovieView(DetailView):
