@@ -9,6 +9,10 @@ import flatpickr from "flatpickr";
 import $ from 'jquery';
 // import collapse from 'bootstrap/js/dist/collapse';
 import { Collapse, Modal } from 'bootstrap';
+import { createApp } from "vue";
+import WeatherGadget from '../vue/weather.vue'
+
+createApp(WeatherGadget).mount('#weather-gadget')
 
 class APIFunctions {
     static async send_api_get(endpoint, params) {

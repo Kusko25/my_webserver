@@ -1,28 +1,30 @@
 from django.urls import path
-from .views import (
-    HomeView,
-    MovieView,
-    MedicationEventFormView,
-    TVShowEpisodeView,
-    PowerMonitorView,
-    ExperimentView,
-    APIViews,
-    GalleryView,
-    GalleryViewerAPI,
-)
-from .views.rss.read_comics_online import StarTrekLowerDecks2024
+
 from .api.api_views import (
-    mark_show_favorite,
-    mark_schedule_fulfilled_medication,
     mark_schedule_fulfilled_exercise,
+    mark_schedule_fulfilled_medication,
     mark_schedule_fulfilled_plant,
+    mark_show_favorite,
     register_medication_event,
 )
+from .api.weather import WeatherInfoView
+from .views import (
+    APIViews,
+    ExperimentView,
+    GalleryView,
+    GalleryViewerAPI,
+    HomeView,
+    MedicationEventFormView,
+    MovieView,
+    PowerMonitorView,
+    TVShowEpisodeView,
+)
+from .views.rss.read_comics_online import StarTrekLowerDecks2024
 from .views.views_api import (
-    ErrorView_404,
     ControllerView_DailyTemp,
-    PowerReadingView,
     ControlMonitorView,
+    ErrorView_404,
+    PowerReadingView,
     RefreshFeedsView,
     RefreshGadgetView,
 )
@@ -81,6 +83,7 @@ urlpatterns += [
     path("api/monitor_control/", ControlMonitorView.as_view(), name="monitor-control"),
     path("api/update_rss/", RefreshFeedsView.as_view(), name="update-rss"),
     path("api/gadget_data/", RefreshGadgetView.as_view(), name="gadget-data"),
+    path("api/gadget/weather/", WeatherInfoView.as_view(), name="gadget-weather"),
     path("api/html/component/tv-shows/", APIViews.tvShowView, name="comp-tv-shows"),
     path("api/html/component/schedules/", APIViews.schedulesView, name="comp-schedules"),
     path("api/html/component/calories/", APIViews.caloriesView, name="comp-calories"),

@@ -22,11 +22,14 @@ class StarTrekLowerDecks2024:
             for row in soup.find("ul",class_="list").find_all("li"):
                 title, pubDate = [entry for entry in row.find_all("div")]
                 title = title.find("a")
+                assert title is not None
                 href = title.get("href")
                 href = f"https://readcomiconline.li{href}"
                 title = title.find("span")
+                assert title is not None
                 title = title.text.strip()
                 pubDate = pubDate.find("span")
+                assert pubDate is not None
                 pubDate = pubDate.text.strip()
                 pubDate = pubDate.split("/")
                 pubDate = [int(pubDate[2]),int(pubDate[0]), int(pubDate[1])]
@@ -60,5 +63,6 @@ class StarTrekLowerDecks2024:
     
     @classmethod
     def view(cls, request):
+        return HttpResponse("Offline. Run Over.",status=400)
         rss = cls.rss()
         return HttpResponse(rss, content_type='application/rss+xml; charset=utf-8')

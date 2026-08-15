@@ -146,8 +146,9 @@ def parse_movie_feed():
     filters = AppSettings.get_key("movies_filters")
     movie_dict = defaultdict(list)
     for entry in entries:
+        year, resolution, group, movie_name = "","","",""
         try:
-            title = entry["title"]
+            title = str(entry["title"])
             # Replace all whitespace with a dot
             title = re.sub(r"\s", ".", title)
             # Isolate movie name, detected by capturing everything before the year

@@ -1,6 +1,6 @@
 const path = require('path');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-
+const { VueLoaderPlugin } = require('vue-loader');
 
 module.exports = {
   resolve: {
@@ -8,6 +8,7 @@ module.exports = {
   },
   plugins: [
     new MiniCssExtractPlugin(options = { filename: 'css/webpack/[name]-index-bundle.css' }),
+    new VueLoaderPlugin()
   ],
   entry: {
     main: './src/js/main.js',
@@ -47,6 +48,10 @@ module.exports = {
         generator: {
           filename: 'fonts/webpack/[name].[ext]'
         }
+      },
+      {
+          test: /\.vue$/,
+          loader: 'vue-loader'
       }
     ]
   }
