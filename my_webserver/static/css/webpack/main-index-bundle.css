@@ -2119,4 +2119,7 @@ url(../../fonts/webpack/bootstrap-icons..woff) format("woff");
     flex-direction: column;
     background: rgba(90, 90, 90, 0.5);
 }
+.weather-icon {
+    max-width: 50px;
+}
 

@@ -1,24 +1,24 @@
-from django.db import transaction
+import logging
+import re
+from collections import defaultdict
+from datetime import date, datetime
+
+import feedparser as fp
+import requests
+from bs4 import BeautifulSoup
 from django.contrib import messages
+from django.db import transaction
 from django.utils import timezone
 
 from ..models import (
-    TVShow,
-    TVShowEpisode,
-    TVShowEpisodeInstance,
     AppSettings,
     Movie,
     MovieInstance,
+    TVShow,
+    TVShowEpisode,
+    TVShowEpisodeInstance,
 )
 from ..utils import process_show_name
-
-from datetime import date, datetime
-from collections import defaultdict
-import requests
-import logging
-import re
-import feedparser as fp
-from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ def get_tv_schedule(ep_date: date):
         soup = BeautifulSoup(response.content, features="html.parser")
         try:  # So many ways to raise exceptions when parsing soup
             for i, day in enumerate(
-                soup.find_all(class_=lambda c: c and (c == "day" or c == "today"))
+                soup.find_all(class_=lambda c: c and (c == "day" or c == "today")) # type: ignore
             ):
                 for episode in day.find_all(
                     class_=lambda c: c and ("ep" in c and "info" in c)

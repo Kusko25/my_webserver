@@ -22,7 +22,7 @@ fetchData();
         <div v-if="weatherData">
             <div class="weather-wrapper">
                 <div v-for="reading in weatherData" :key="reading.id" class="weather-entry border border-light rounded p-1">
-                    <div class="text-center">{{ reading.sun }}</div>
+                    <div class="text-center"><img v-bind:src="reading.sun" class="rounded weather-icon" alt=""></div>
                     <div class="text-center fw-bold">{{ reading.temperature }}</div>
                     <div class="text-center fw-light">{{ reading.hour }}</div>
                 </div>
@@ -46,6 +46,9 @@ fetchData();
     display: flex;
     flex-direction: column;
     background: rgba(90, 90, 90, 0.5);
+}
+.weather-icon {
+    max-width: 50px;
 }
 </style>
 
