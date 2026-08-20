@@ -2,8 +2,8 @@ from datetime import datetime, timedelta
 from typing import ClassVar
 
 import requests
-from django.utils.timezone import get_default_timezone
 from django.templatetags.static import static
+from django.utils.timezone import get_default_timezone
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -31,7 +31,7 @@ class WeatherInfo:
                 weather_data.append(
                     (
                         datetime.fromtimestamp(
-                            float(start + (i*step))/1000,
+                            float(start + ((i)*step))/1000,
                             tz=tz
                         ),
                         temperatures[i],
@@ -51,10 +51,14 @@ class WeatherInfoView(APIView):
             match id:
                 case 1: #clear
                     return icon_url('0-8')
+                case 2: #partial cloud -
+                    return icon_url('2-8')
                 case 3: #partial cloud +
                     return icon_url('5-8')
                 case 4: #cloud grey
                     return icon_url('8-8')
+                case 7: #rain 1 drops
+                    return icon_url('7')
                 case 8: #rain 2 drops
                     return icon_url('8')
                 case _:
@@ -71,6 +75,7 @@ class WeatherInfoView(APIView):
                 "temperature": temperature_str,
                 "hour": time.strftime('%H:%M'),
                 "sun": get_icon(icon),
+                "sun_id": icon,
                 "isDay": isDay
             })
         return Response(response_data)
