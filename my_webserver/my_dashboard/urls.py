@@ -19,7 +19,14 @@ from .views import (
     PowerMonitorView,
     TVShowEpisodeView,
 )
-from .views.rss.read_comics_online import StarTrekLowerDecks2024
+from .views.rss.feedcrawlers import (
+    StarTrekLowerDecks2024,
+    SVSComics,
+    SVSComics3DPornComics,
+    SVSComicsHentaiComics,
+    SVSComicsMuscle,
+    SVSComicsPornComics,
+)
 from .views.views_api import (
     ControllerView_DailyTemp,
     ControlMonitorView,
@@ -95,4 +102,9 @@ urlpatterns += [
 urlpatterns += [
     # http://127.0.0.1:5000/rss/star-trek-lower-decks-2024
     path("rss/star-trek-lower-decks-2024/", StarTrekLowerDecks2024.view, name="rss-star-trek-lower-decks-2024"),
+    path("rss/svs-comics-all/", SVSComics.view, name="rss-svs-comics-all"),
+    path("rss/svs-comics-porn-comics/", SVSComicsPornComics.view, name="rss-svs-comics-porn-comics"),
+    path("rss/svs-comics-3d-porn-comics/", SVSComics3DPornComics.view, name="rss-svs-comics-3d-porn-comics"),
+    path("rss/svs-comics-hentai/", SVSComicsHentaiComics.view, name="rss-svs-comics-hentai"),
+    path("rss/svs-comics-muscle-growth/", SVSComicsMuscle.view, name="rss-svs-comics-muscle-growth"),
 ]
