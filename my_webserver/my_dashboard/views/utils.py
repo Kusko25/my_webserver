@@ -47,21 +47,25 @@ def get_headset_data():
                 }
                 battery_status = device['battery']['status']
                 battery_level = device['battery']['level']
-                if battery_status == 'BATTERY_CHARGING':
-                    context['icon'] = 'battery-charging'
-                    context['text'] = 'Charging...' # During charging, level is always 100
-                elif battery_status == 'BATTERY_AVAILABLE':
-                    if battery_level>85:
-                        context['icon'] = 'battery-full'
-                    elif battery_level>35:
-                        context['icon'] = 'battery-half'
-                    else:
-                        context['icon'] = 'battery'
-                    context['text'] = f'{battery_level}%'
-                else:
-                    logger.warning(f'Unknown battery status: {battery_status}')
-                    context['icon'] = 'ban'
-                    context['text'] = 'Unknown'
+                match battery_status:
+                    case 'BATTERY_CHARGING':
+                        context['icon'] = 'battery-charging'
+                        context['text'] = 'Charging...' # During charging, level is always 100
+                    case 'BATTERY_AVAILABLE':
+                        if battery_level>85:
+                            context['icon'] = 'battery-full'
+                        elif battery_level>35:
+                            context['icon'] = 'battery-half'
+                        else:
+                            context['icon'] = 'battery'
+                        context['text'] = f'{battery_level}%'
+                    case 'BATTERY_UNAVAILABLE':
+                        context['icon'] = 'ban'
+                        context['text'] = 'Unknown'
+                    case _:
+                        logger.warning(f'Unknown battery status: {battery_status}')
+                        context['icon'] = 'ban'
+                        context['text'] = 'Unknown'
                 break
         except Exception as e:
             logger.error(f'Error while getting headset battery: {e}')

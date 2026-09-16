@@ -6,3 +6,5 @@ node_modules/
 db.sqlite3
 my_webserver/uv.lock
 my_webserver/webserver.log*
+my_webserver/staticfiles/*
+my_webserver/static/images/weather/fullsize/*

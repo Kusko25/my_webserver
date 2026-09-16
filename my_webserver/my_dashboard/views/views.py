@@ -1,29 +1,28 @@
-from django.urls import reverse, reverse_lazy
-from django.views.generic import TemplateView, DetailView, FormView
-from django.shortcuts import render
-from django.utils import timezone
-from rest_framework.views import APIView
-from rest_framework.response import Response
-
-from ..models import AppSettings
-from ..models import (
-    Movie,
-    MovieInstance,
-    TVShowEpisodeInstance,
-    TVShowEpisode,
-    ScheduleMedication,
-    ScheduleExercise,
-    SchedulePlantWatering,
-    EventCalories,
-)
-from ..logic import get_tv_schedule, parse_movie_feed
-from ..forms import MedicationEventForm, CalorieEventForm, ExerciseEventForm
-
-from .utils import defaultContext, get_context_topbar, sidebarItem
-from ..variables import FRONTEND_TITLE_TEMPLATE
-
 from datetime import date, timedelta
 from logging import getLogger
+
+from django.shortcuts import render
+from django.urls import reverse, reverse_lazy
+from django.utils import timezone
+from django.views.generic import DetailView, FormView, TemplateView
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from ..forms import CalorieEventForm, ExerciseEventForm, MedicationEventForm
+from ..logic import get_tv_schedule, parse_movie_feed
+from ..models import (
+    AppSettings,
+    EventCalories,
+    Movie,
+    MovieInstance,
+    ScheduleExercise,
+    ScheduleMedication,
+    SchedulePlantWatering,
+    TVShowEpisode,
+    TVShowEpisodeInstance,
+)
+from ..variables import FRONTEND_TITLE_TEMPLATE
+from .utils import defaultContext, get_context_topbar, sidebarItem
 
 logger = getLogger(__name__)
 

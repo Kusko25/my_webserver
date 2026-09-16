@@ -1,17 +1,18 @@
-from django.views.generic import FormView
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from functools import lru_cache
-from urllib.parse import urlparse
-from bs4 import BeautifulSoup
-from typing import Any, Optional
-import requests
 import json
+from functools import lru_cache
+from typing import Any, Optional
+from urllib.parse import urlparse
 
+import requests
+from bs4 import BeautifulSoup
 from django.urls import reverse
-from .views import SidebarMixin
+from django.views.generic import FormView
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from ..forms import GalleryViewerUrlForm
 from ..variables import FRONTEND_TITLE_TEMPLATE
+from .views import SidebarMixin
 
 FRONTEND_GALLERY_TITLE_TEMPLATE = FRONTEND_TITLE_TEMPLATE % "Gallery - %s"
 
@@ -58,7 +59,7 @@ class GalleryViewerAPI(APIView):
         return response
     
     @classmethod
-    def parse_url(cls, url, index=0) -> Optional[dict[str,Any]]:
+    def parse_url(cls, url, index=0) -> dict[str, Any] | None:
         """Parse the URL and return a dictionary with the parsed data."""
         parsed_url = urlparse(url)
         
@@ -73,7 +74,7 @@ class GalleryViewerAPI(APIView):
     @classmethod
     def parse_nortverse_com(cls, url, index=0):
         """Parse the URL of a Nortverse gallery."""
-        soup:'BeautifulSoup' = cls.get_soup(url)
+        soup:BeautifulSoup = cls.get_soup(url)
         gallery: dict[str,Any] = {'active': True}
         gallery['url'] = url
         
@@ -117,14 +118,14 @@ class GalleryViewerAPI(APIView):
         """Parse the URL of an E-Hentai gallery."""
         parsed_url = urlparse(url)
         if '/g/' in parsed_url.path:
-            soup = cls.get_soup(url)
+            soup = cls.get_soup(url, cookies=json.dumps({"nw":"1"}))
             gallery_div = soup.find('div', id='gdt')
             assert gallery_div is not None
             first_link = gallery_div.find('a')
             assert first_link is not None
             return cls.parse_e_hentai_org(first_link['href'])
         
-        soup = cls.get_soup(url)
+        soup = cls.get_soup(url, cookies=json.dumps({"nw":"1"}))
         assert soup
         gallery: dict[str,Any] = {'active': True}
         gallery['url'] = url
@@ -162,9 +163,11 @@ class GalleryViewerAPI(APIView):
     
     @staticmethod
     @lru_cache(maxsize=128)
-    def get_soup(url, session=None):
+    def get_soup(url, session=None, cookies=None):
         """Get the soup object for the given URL."""
+        if cookies:
+            cookies = json.loads(cookies)
         session = session or requests.Session()
-        response = session.get(url)
+        response = session.get(url, cookies=cookies)
         response.raise_for_status()
         return BeautifulSoup(response.text, 'html.parser')

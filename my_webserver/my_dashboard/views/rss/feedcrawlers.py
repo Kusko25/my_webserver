@@ -1,10 +1,13 @@
-from .rfeed import Item, Feed, Guid
-from bs4 import BeautifulSoup, Tag
 import datetime
-import requests
 
+import requests
+from bs4 import BeautifulSoup, Tag
 from django.http import HttpResponse
-from django.utils.timezone import get_default_timezone as tz, now
+from django.utils.timezone import get_default_timezone as tz
+from django.utils.timezone import now
+
+from .rfeed import Feed, Guid, Item
+
 
 def nullCheck(tag: Tag | None, func = lambda x: x.text):
     if isinstance(tag,Tag):
@@ -14,6 +17,7 @@ def nullCheck(tag: Tag | None, func = lambda x: x.text):
 
 class RSSView:
     ENABLED = True
+    UPDATE_INTERVAL = 24
     disabled_message = "Offline. Run Over."
     last_update = None
     items = []
@@ -75,7 +79,7 @@ class RSSView:
     
     @classmethod
     def rss(cls):
-        if cls.last_update and (now() - cls.last_update) < datetime.timedelta(days=1):
+        if cls.last_update and (now() - cls.last_update) < datetime.timedelta(hours=cls.UPDATE_INTERVAL):
             pass
         else:
             cls._update_rss()
@@ -93,12 +97,18 @@ class RSSView:
         if not cls.ENABLED:
             return HttpResponse(cls.disabled_message,status=400)
         rss = cls.rss()
-        return HttpResponse(rss, content_type='application/rss+xml; charset=utf-8')
+        if request.GET.get('xml') != None:
+            content_type = 'application/xml'
+        else:
+            content_type='application/rss+xml'
+        content_type += '; charset=utf-8'
+        return HttpResponse(rss, content_type=content_type)
 
 class StarTrekLowerDecks2024(RSSView):
     ENABLED = False
 
 class SVSComics(RSSView):
+    UPDATE_INTERVAL = 2
     title = "SVSComics - Porn Comics & Sex Games"
     url = "https://svscomics.com/"
     link = "https://svscomics.com/"
@@ -137,13 +147,14 @@ class SVSComics(RSSView):
                 description = f"Tags: {tags}\nLinks:\n{"\n".join(links)}"
                 description = post.prettify()
                 items.append(Item(
-                    title=title,
+                    title=f"{title} - {pubDate.strftime('%Y-%m-%d')}",
                     link=href,
                     author="Html scrape to rss",
-                    guid=Guid(href),
+                    guid=Guid(href+f"{pubDate.strftime('%Y-%m-%d')}", isPermaLink=False),
                     pubDate=pubDate,
                     description=description
                 ))
+            # items = sorted(items, key=lambda x:x.pubDate,reverse=True)
             cls.items = items
             cls.last_update = now()
         except Exception as e:

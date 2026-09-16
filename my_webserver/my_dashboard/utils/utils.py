@@ -1,7 +1,10 @@
-import subprocess
 import json
+import subprocess
 from pathlib import Path
-from typing import Union
+
+
+class ToolInvocationError(Exception):
+    pass
 
 def process_show_name(show_name):
     processed_show_name = ""
@@ -15,13 +18,11 @@ def process_show_name(show_name):
 
     return processed_show_name
 
-def call_external_tool(name, params=[], parseAsJson=False) -> Union[bytes,dict]:
+def call_external_tool(name, params=[], parseAsJson=False) -> bytes | dict:
     path = Path(__file__).parent / "external_tools" / name
     if not path.exists():
         raise FileNotFoundError(f"External tool '{name}' not found.")
-    output = subprocess.run([str(path), *params], capture_output=True)
-    if output.returncode != 0:
-        raise Exception(f"External tool '{name}' failed with error code {output.returncode}:\n{output.stderr}")
+    output = subprocess.run([str(path), *params], capture_output=True,check=True)
     if parseAsJson:
         return json.loads(output.stdout)
     else:
