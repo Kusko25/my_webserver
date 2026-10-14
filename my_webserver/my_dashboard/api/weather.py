@@ -1,5 +1,6 @@
+from collections import Counter
 from datetime import datetime, timedelta
-from typing import ClassVar
+from typing import ClassVar, NamedTuple
 
 import requests
 from django.templatetags.static import static
@@ -8,9 +9,17 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 tz = get_default_timezone()
-
+class WeatherReading(NamedTuple):
+    time: datetime
+    temperature: int
+    icon: int
+    isDay: bool
+    
+    def as_tuple(self):
+        return (self.time,self.temperature,self.icon,self.isDay)
+    
 class WeatherInfo:
-    weather_data:ClassVar[list[tuple[datetime,int, int, bool]]] = []
+    weather_data:ClassVar[list[WeatherReading]] = []
     last_refresh:ClassVar[datetime | None] = None
     refresh_interval:ClassVar[timedelta] = timedelta(hours=1)
     
@@ -29,14 +38,14 @@ class WeatherInfo:
             temperatures = forecast['temperature']
             for i in range(len(temperatures)):
                 weather_data.append(
-                    (
-                        datetime.fromtimestamp(
+                    WeatherReading(
+                        time=datetime.fromtimestamp(
                             float(start + ((i)*step))/1000,
                             tz=tz
                         ),
-                        temperatures[i],
-                        forecast['icon'][i] if i<len(forecast['icon']) else -1,
-                        forecast['isDay'][i] if i<len(forecast['isDay']) else False,
+                        temperature=temperatures[i],
+                        icon=forecast['icon'][i] if i<len(forecast['icon']) else -1,
+                        isDay=forecast['isDay'][i] if i<len(forecast['isDay']) else False,
                     )
                 )
         cls.weather_data = sorted(weather_data)
@@ -63,7 +72,8 @@ class WeatherInfoView(APIView):
                     return icon_url('8')
                 case _:
                     return icon_url('unknown')
-        for time,temperature,icon,isDay in WeatherInfo.getData():
+        for reading in WeatherInfo.getData():
+            time,temperature,icon,isDay = reading.as_tuple()
             if time < datetime.now(tz=tz) - timedelta(hours=4):
                 continue
             if time > datetime.now(tz=tz) + timedelta(hours=4):
@@ -77,5 +87,21 @@ class WeatherInfoView(APIView):
                 "sun": get_icon(icon),
                 "sun_id": icon,
                 "isDay": isDay
+            })
+        day_prog = [datetime.now(tz=tz) + timedelta(days=i) for i in range(3)]
+        for day in day_prog:
+            temperatures = [reading.temperature for reading in WeatherInfo.getData() if reading.time.date() == day.date() and reading.isDay]
+            sunicons = [reading.icon for reading in WeatherInfo.getData() if reading.time.date() == day.date() and reading.isDay]
+            temperature = sorted(temperatures)[len(temperatures)//4*3]
+            icon = Counter(sunicons).most_common(1)[0][0]
+            temperature_str = str(temperature)
+            temperature_str = f"{temperature_str[:-1]}.{temperature_str[-1]}°C"
+            response_data.append({
+                "id": len(response_data),
+                "temperature": temperature_str,
+                "hour": day.strftime('%a'),
+                "sun": get_icon(icon),
+                "sun_id": icon,
+                "isDay": True
             })
         return Response(response_data)
